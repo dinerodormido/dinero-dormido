@@ -2,18 +2,78 @@
 
 import { FormEvent, useState } from "react";
 
+type ReportSlide = {
+  eyebrow: string;
+  title: string;
+  text: string;
+  type: "summary" | "invoices" | "quotes" | "work" | "clients";
+};
+
 const findings = [
-  { title: "Facturas vencidas", text: "Importes pendientes que conviene reclamar antes de que se enfríen.", example: "F-104 · 1.240 € · vencida hace 18 días", tone: "alert" },
-  { title: "Presupuestos sin seguimiento", text: "Presupuestos enviados que nadie ha vuelto a perseguir.", example: "P-088 · 4.800 € · enviado hace 12 días", tone: "opportunity" },
-  { title: "Trabajos sin facturar", text: "Servicios terminados o aceptados que deberían revisarse contra factura.", example: "Trabajo terminado · sin factura asociada", tone: "teal" },
-  { title: "Clientes reactivables", text: "Clientes antiguos que podrían necesitar revisión, mantenimiento o recompra.", example: "Revisión hace 11 meses · contactar", tone: "success" }
+  {
+    title: "Facturas vencidas",
+    text: "Detectamos facturas pendientes, vencidas o parcialmente pagadas para que sepas qué reclamar primero.",
+    example: "F-104 · 1.240 € · vencida hace 18 días",
+    tone: "alert",
+  },
+  {
+    title: "Presupuestos dormidos",
+    text: "Encontramos presupuestos enviados que no recibieron seguimiento y todavía pueden recuperarse.",
+    example: "P-088 · 4.800 € · enviado hace 12 días",
+    tone: "opportunity",
+  },
+  {
+    title: "Trabajos sin facturar",
+    text: "Cruzamos trabajos, presupuestos aceptados y facturas para detectar servicios terminados que no se han cobrado.",
+    example: "Trabajo terminado · sin factura asociada",
+    tone: "teal",
+  },
+  {
+    title: "Clientes reactivables",
+    text: "Buscamos clientes antiguos que podrían volver a comprar por mantenimiento, revisión o recompra.",
+    example: "Revisión hace 11 meses · contactar",
+    tone: "success-tone",
+  },
 ];
 
 const steps = [
   ["Nos pasas una muestra", "Facturas, presupuestos y clientes de los últimos meses. Puede ser Excel, PDF o export de tu programa."],
   ["Revisamos y cruzamos datos", "Miramos fechas, importes, estados, clientes, presupuestos, trabajos y señales de seguimiento perdido."],
-  ["Te entregamos un informe claro", "Recibes una lista priorizada de oportunidades y acciones recomendadas para revisar."],
-  ["Decides si seguir", "Si tiene sentido, podemos convertirlo en control mensual o semanal."]
+  ["Te entregamos un informe claro", "Recibes una lista priorizada de oportunidades, importes estimados y acciones recomendadas."],
+  ["Decides si seguir", "Si aporta valor, lo convertimos en control mensual o semanal para que nada vuelva a quedar olvidado."],
+];
+
+const reportSlides: ReportSlide[] = [
+  {
+    eyebrow: "Resumen ejecutivo",
+    title: "Una foto clara de dónde mirar primero",
+    text: "Empiezas viendo una foto clara de dónde está el dinero pendiente y qué oportunidades merece la pena revisar primero.",
+    type: "summary",
+  },
+  {
+    eyebrow: "Facturas vencidas",
+    title: "Qué reclamar y en qué orden",
+    text: "El informe te dice qué facturas deberías reclamar y en qué orden.",
+    type: "invoices",
+  },
+  {
+    eyebrow: "Presupuestos dormidos",
+    title: "Presupuestos que nadie volvió a perseguir",
+    text: "También detectamos presupuestos que se enviaron pero nadie volvió a perseguir.",
+    type: "quotes",
+  },
+  {
+    eyebrow: "Trabajos sin facturar",
+    title: "Servicios hechos que conviene revisar",
+    text: "Cruzamos trabajos, presupuestos aceptados y facturas para detectar posibles servicios ya realizados que todavía no se han cobrado.",
+    type: "work",
+  },
+  {
+    eyebrow: "Clientes reactivables + mensajes listos",
+    title: "Acciones concretas para contactar",
+    text: "No solo señalamos oportunidades. También damos acciones concretas y mensajes listos para enviar.",
+    type: "clients",
+  },
 ];
 
 const dataTrust = [
@@ -22,23 +82,31 @@ const dataTrust = [
   "No necesitamos acceso permanente.",
   "No sustituimos tu programa actual.",
   "Solo revisamos la información necesaria para la auditoría.",
-  "Acuerdo de confidencialidad disponible si lo necesitas."
-];
-
-const fit = [
-  "Instaladores",
-  "Reformas técnicas",
-  "Mantenimiento",
-  "Climatización",
-  "Servicios B2B",
-  "Empresas con presupuestos de ticket medio/alto",
-  "Negocios que trabajan con WhatsApp, email, Excel o programa de facturación"
+  "Acuerdo de confidencialidad disponible si lo necesitas.",
 ];
 
 const prices = [
-  { name: "Auditoría inicial", price: "149 €", text: "Para detectar oportunidades y ver si tiene sentido seguir.", featured: true, items: ["Revisión de muestra", "Facturas vencidas", "Presupuestos dormidos", "Clientes reactivables", "Informe con acciones"] },
-  { name: "Control mensual", price: "desde 149 €/mes", text: "Para mantener el seguimiento activo cada mes.", featured: false, items: ["Revisión mensual", "Lista priorizada", "Mensajes listos", "Informe mensual", "Seguimiento recurrente"] },
-  { name: "Control semanal", price: "desde 299 €/mes", text: "Para empresas con más volumen.", featured: false, items: ["Revisión semanal", "Presupuestos calientes", "Facturas pendientes", "Soporte por email", "Reunión mensual"] }
+  {
+    name: "Auditoría inicial",
+    price: "149 €",
+    text: "Para detectar oportunidades y ver si tiene sentido seguir.",
+    featured: true,
+    items: ["Revisión de muestra", "Facturas vencidas", "Presupuestos dormidos", "Clientes reactivables", "Informe con acciones"],
+  },
+  {
+    name: "Control mensual",
+    price: "desde 149 €/mes",
+    text: "Para mantener el seguimiento activo cada mes.",
+    featured: false,
+    items: ["Revisión mensual", "Lista priorizada", "Mensajes listos", "Informe mensual", "Seguimiento recurrente"],
+  },
+  {
+    name: "Control semanal",
+    price: "desde 299 €/mes",
+    text: "Para empresas con más volumen.",
+    featured: false,
+    items: ["Revisión semanal", "Presupuestos calientes", "Facturas pendientes", "Soporte por email", "Reunión mensual"],
+  },
 ];
 
 const faqs = [
@@ -49,7 +117,7 @@ const faqs = [
   ["¿Esto es una gestoría o recobros?", "No. No sustituimos a tu gestoría y no hacemos recobro agresivo. Te damos una lista clara de qué revisar, reclamar o seguir."],
   ["¿Qué recibo exactamente?", "Un informe con oportunidades detectadas, importes estimados, prioridad y acciones recomendadas. El objetivo es que sepas qué mirar primero."],
   ["¿Todo lo detectado es dinero cobrable inmediato?", "No siempre. Algunas partidas son facturas reclamables; otras son oportunidades comerciales o revisiones internas que conviene validar."],
-  ["¿Puedo anonimizar los datos?", "Sí. Para una primera muestra puedes ocultar nombres sensibles y dejar importes, fechas, estados y referencias suficientes para revisar el caso."]
+  ["¿Puedo anonimizar los datos?", "Sí. Para una primera muestra puedes ocultar nombres sensibles y dejar importes, fechas, estados y referencias suficientes para revisar el caso."],
 ];
 
 function Logo() {
@@ -61,53 +129,406 @@ function Logo() {
           <path d="M41 41L54 54" stroke="#00A7B5" strokeWidth="7" strokeLinecap="round" />
           <path d="M37 22C34.7 19 31.6 17.4 28 17.4C21.6 17.4 16.8 22.4 16.8 28.7C16.8 35 21.6 40 28 40C31.6 40 34.7 38.4 37 35.4" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
           <path d="M13 27H28M13 33H26" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
-          <path d="M34 19h6l-6 5h6" stroke="#00A7B5" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M36 19h5l-5 4h5" stroke="#00A7B5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity=".75" />
         </svg>
       </span>
-      <span><b>Dinero</b> <b>Dormido</b></span>
+      <span>
+        <b>Dinero</b> <b>Dormido</b>
+      </span>
     </a>
+  );
+}
+
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 6l6 6-6 6"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
 export default function Home() {
   const [sent, setSent] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slide = reportSlides[activeSlide];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSent(true);
   }
 
+  function goToSlide(nextIndex: number) {
+    setActiveSlide((nextIndex + reportSlides.length) % reportSlides.length);
+  }
+
   return (
     <main id="inicio">
-      <header><div className="wrap nav"><Logo /><nav className="links"><a href="#detectamos">Qué encontramos</a><a href="#como-funciona">Cómo funciona</a><a href="#informe">Informe</a><a href="#precios">Precios</a><a href="#faq">FAQ</a></nav><a className="btn primary" href="#formulario">Pedir revisión inicial</a></div></header>
+      <header>
+        <div className="wrap nav">
+          <Logo />
+          <nav className="links" aria-label="Navegación principal">
+            <a href="#detectamos">Qué encontramos</a>
+            <a href="#como-funciona">Cómo funciona</a>
+            <a href="#informe">Informe</a>
+            <a href="#precios">Precios</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+          <a className="btn primary" href="#formulario">Pedir revisión inicial</a>
+        </div>
+      </header>
 
-      <section className="hero"><div className="wrap hero-grid"><div><h1 className="h1">Auditoría de dinero dormido para empresas que hacen presupuestos y facturan a clientes.</h1><p className="lead">Detectamos facturas vencidas, presupuestos sin seguimiento, trabajos sin facturar y clientes antiguos que puedes reactivar.</p><div className="trust">No tienes que instalar nada. No tienes que cambiar de programa. Empezamos con una muestra pequeña de tus datos.</div><div className="actions"><a className="btn primary big" href="#formulario">Pedir revisión inicial</a><a className="btn secondary big" href="#informe">Ver ejemplo de informe</a></div><p className="microcopy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización, servicios B2B y empresas con presupuestos de ticket medio/alto.</p></div><div className="dash"><div className="dash-top"><div className="dash-head"><small>Ejemplo de informe</small><span>Instalaciones</span></div><div className="dash-total">26.330 € <span>en oportunidades detectadas</span></div><p className="dash-note">Ejemplo basado en una empresa de instalaciones. No todo es dinero cobrable inmediato: algunas son oportunidades a revisar.</p></div><div className="summary-list">{[["Facturas vencidas","4.250 €","Reclamar primero"],["Presupuestos sin seguimiento","11.700 €","Llamada de seguimiento"],["Clientes reactivables","8.900 €","Campaña de mantenimiento"],["Trabajos sin facturar","1.480 €","Revisar emisión"]].map(([label,value,action])=><div className="summary-row" key={label}><div><span>{label}</span><b>{action}</b></div><strong>{value}</strong></div>)}</div></div></div></section>
+      <section className="hero">
+        <div className="wrap hero-grid">
+          <div>
+            <h1 className="h1">Auditoría de dinero dormido para empresas que hacen presupuestos y facturan a clientes.</h1>
+            <p className="lead">Detectamos facturas vencidas, presupuestos sin seguimiento, trabajos sin facturar y clientes antiguos que puedes reactivar.</p>
+            <div className="trust">No tienes que instalar nada. No tienes que cambiar de programa. Empezamos con una muestra pequeña de tus datos.</div>
+            <div className="actions">
+              <a className="btn primary big" href="#formulario">Pedir revisión inicial</a>
+              <a className="btn secondary big" href="#informe">Ver ejemplo de informe</a>
+            </div>
+            <p className="microcopy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización, servicios B2B y empresas con presupuestos de ticket medio/alto.</p>
+          </div>
+          <div className="dash" aria-label="Ejemplo de informe de Dinero Dormido">
+            <div className="dash-top">
+              <div className="dash-head">
+                <small>Ejemplo de informe</small>
+                <span>Empresa de instalaciones</span>
+              </div>
+              <div className="dash-total">26.330 € <span>en oportunidades detectadas</span></div>
+              <p className="dash-note">Ejemplo basado en una empresa de instalaciones. No todo es dinero cobrable inmediato: algunas son oportunidades a revisar.</p>
+            </div>
+            <div className="summary-list">
+              {[
+                ["Facturas vencidas", "4.250 €", "Reclamar primero"],
+                ["Presupuestos sin seguimiento", "11.700 €", "Llamada de seguimiento"],
+                ["Clientes reactivables", "8.900 €", "Campaña de mantenimiento"],
+                ["Trabajos sin facturar", "1.480 €", "Revisar emisión"],
+              ].map(([label, value, action]) => (
+                <div className="summary-row" key={label}>
+                  <div>
+                    <span>{label}</span>
+                    <b>{action}</b>
+                  </div>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <section className="section"><div className="wrap narrow"><h2>Cuando el seguimiento depende de la memoria, se escapan oportunidades.</h2><p className="copy">En empresas de instalaciones, reformas o mantenimiento es normal tener presupuestos enviados, trabajos terminados, facturas pendientes y clientes antiguos repartidos entre WhatsApp, Excel, PDFs y el programa de facturación.</p></div></section>
+      <section className="section problem">
+        <div className="wrap narrow">
+          <h2>Tu empresa puede estar trabajando mucho y aun así perder dinero.</h2>
+          <p className="copy">En muchas pequeñas empresas, el seguimiento depende demasiado de la memoria del dueño, de WhatsApps sueltos, de Excels, de PDFs y de una administrativa saturada.</p>
+          <div className="system-note">No es falta de esfuerzo. Es falta de sistema.</div>
+        </div>
+      </section>
 
-      <section id="detectamos" className="section soft"><div className="wrap"><div className="section-head"><h2>Qué encontramos en la auditoría</h2><p className="copy">No prometemos magia. Revisamos señales concretas y las convertimos en una lista de acciones.</p></div><div className="grid4">{findings.map((item)=><article className="card" key={item.title}><div className={`icon ${item.tone}`}>€</div><h3>{item.title}</h3><p>{item.text}</p><div className="example">{item.example}</div></article>)}</div></div></section>
+      <section id="detectamos" className="section soft">
+        <div className="wrap">
+          <div className="section-head">
+            <h2>Qué encuentra Dinero Dormido en tu negocio</h2>
+            <p className="copy">Cruzamos facturas, presupuestos, clientes y estados de cobro para convertir el desorden en acciones claras.</p>
+          </div>
+          <div className="grid4">
+            {findings.map((item) => (
+              <article className="card" key={item.title}>
+                <div className={`icon ${item.tone}`}>€</div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+                <div className="example">{item.example}</div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <section id="como-funciona" className="section"><div className="wrap"><div className="section-head center"><h2>Cómo funciona</h2><p className="copy">Una revisión acotada, pensada para saber rápido si hay valor antes de complicar nada.</p></div><div className="steps">{steps.map(([title,text],index)=><div className="step" key={title}><div className="num">{index+1}</div><h3>{title}</h3><p>{text}</p></div>)}</div></div></section>
+      <section id="como-funciona" className="section">
+        <div className="wrap">
+          <div className="section-head center">
+            <h2>Cómo funciona</h2>
+            <p className="copy">Una revisión acotada, pensada para saber rápido si hay valor antes de complicar nada.</p>
+          </div>
+          <div className="steps">
+            {steps.map(([title, text], index) => (
+              <div className="step" key={title}>
+                <div className="num">{index + 1}</div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <section className="section slate"><div className="wrap split"><div><h2>Tus datos, bajo control</h2><p className="copy">La auditoría está planteada para trabajar con la mínima información necesaria y sin acceso permanente a tu negocio.</p></div><div className="check-panel">{dataTrust.map((item)=><div className="check-row" key={item}>✓ {item}</div>)}</div></div></section>
+      <section id="informe" className="section report-section">
+        <div className="wrap">
+          <div className="section-head center">
+            <h2>Así se ve un informe de Dinero Dormido</h2>
+            <p className="copy">No recibes teoría ni gráficos vacíos. Recibes un informe claro con dinero pendiente, oportunidades detectadas y acciones concretas para actuar.</p>
+          </div>
+          <div className="report-carousel">
+            <button className="arrow" aria-label="Ver informe anterior" onClick={() => goToSlide(activeSlide - 1)}>
+              <Chevron direction="left" />
+            </button>
+            <div className="slide-stage" key={slide.eyebrow}>
+              <div className="pdf-mockup">
+                <div className="pdf-top">
+                  <span>Dinero Dormido</span>
+                  <b>{slide.eyebrow}</b>
+                </div>
+                <ReportMockup type={slide.type} />
+              </div>
+              <aside className="slide-copy">
+                <span>{slide.eyebrow}</span>
+                <h3>{slide.title}</h3>
+                <p>{slide.text}</p>
+              </aside>
+            </div>
+            <button className="arrow" aria-label="Ver informe siguiente" onClick={() => goToSlide(activeSlide + 1)}>
+              <Chevron direction="right" />
+            </button>
+          </div>
+          <div className="dots" aria-label="Seleccionar parte del informe">
+            {reportSlides.map((item, index) => (
+              <button
+                key={item.eyebrow}
+                aria-label={item.eyebrow}
+                className={index === activeSlide ? "active" : ""}
+                onClick={() => setActiveSlide(index)}
+              />
+            ))}
+          </div>
+          <div className="report-cta">
+            <h3>¿Quieres una revisión así para tu empresa?</h3>
+            <p>Empieza con una auditoría inicial y descubre qué dinero pendiente, presupuestos olvidados y clientes reactivables tienes ahora mismo.</p>
+            <a className="btn primary big" href="#formulario">Solicitar auditoría</a>
+          </div>
+        </div>
+      </section>
 
-      <section className="section positioning"><div className="wrap"><h2>No somos un CRM. No somos una gestoría. No somos recobros.</h2><p className="copy strong-copy">Somos una auditoría práctica para encontrar oportunidades que ya existen en tu negocio:</p><div className="bullet-grid">{["facturas que deberías reclamar","presupuestos que deberías seguir","trabajos que deberías revisar","clientes que podrías volver a contactar"].map((item)=><div key={item}>✓ {item}</div>)}</div></div></section>
+      <section className="section fit-brief">
+        <div className="wrap narrow">
+          <h2>Ideal para negocios con presupuestos y seguimiento comercial</h2>
+          <p className="copy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización y servicios B2B con ticket medio/alto y procesos que hoy dependen demasiado de WhatsApp, email, Excel o memoria.</p>
+        </div>
+      </section>
 
-      <section id="informe" className="section"><div className="wrap report"><div className="report-panel"><div className="report-dark"><small>Ejemplo de informe</small><h2>Acciones recomendadas esta semana</h2><div className="report-stats">{[["Facturas vencidas","3.870 €","4 facturas a revisar"],["Presupuestos a rescatar","21.400 €","9 sin seguimiento"],["Trabajos sin facturar","2 casos","validación interna"],["Clientes reactivables","17","mantenimiento o recompra"]].map(([a,b,c])=><div key={a}><span>{a}</span><b>{b}</b><small>{c}</small></div>)}</div></div></div><div className="messages">{[["Reclamar factura F-104","Confirmar si el pago está programado y dejar fecha de seguimiento."],["Llamar por presupuesto P-088","Resolver dudas y decidir si sigue vivo o se descarta."],["Revisar trabajo terminado en Calle Mayor","Comprobar si existe factura asociada y estado de cobro."],["Contactar clientes con mantenimiento anual","Enviar mensaje breve para ofrecer revisión."]].map(([title,text])=><div className="message" key={title}><h3>{title}</h3><p>{text}</p></div>)}</div></div></section>
+      <section className="section slate">
+        <div className="wrap trust-layout">
+          <div>
+            <h2>Tus datos, bajo control</h2>
+            <p className="copy">La auditoría está planteada para trabajar con la mínima información necesaria y sin acceso permanente a tu negocio.</p>
+            <div className="positioning-box">
+              <h3>No somos un CRM. No somos una gestoría. No somos recobros.</h3>
+              <p>Somos una auditoría práctica para encontrar oportunidades que ya existen: facturas que deberías reclamar, presupuestos que deberías seguir, trabajos que deberías revisar y clientes que podrías volver a contactar.</p>
+            </div>
+          </div>
+          <div className="check-panel">
+            {dataTrust.map((item) => (
+              <div className="check-row" key={item}>✓ {item}</div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <section id="para-quien" className="section soft"><div className="wrap split"><div><h2>Para quién encaja</h2><p className="copy">Funciona mejor cuando vendes con presupuesto, tienes ticket medio/alto y el seguimiento comercial no está perfectamente ordenado.</p></div><div className="chips">{fit.map((item)=><span key={item}>{item}</span>)}</div></div></section>
+      <section id="precios" className="section dark">
+        <div className="wrap">
+          <div className="section-head">
+            <h2>Precios claros para empezar sin complicarte</h2>
+            <p className="copy">La auditoría inicial se descuenta si contratas el control mensual.</p>
+          </div>
+          <div className="grid3">
+            {prices.map((plan) => (
+              <div className={`price ${plan.featured ? "featured" : ""}`} key={plan.name}>
+                <h3>{plan.name}</h3>
+                <div className="amount">{plan.price}</div>
+                <p>{plan.text}</p>
+                <ul>
+                  {plan.items.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+                <a className={`btn ${plan.featured ? "primary" : "secondary"}`} href="#formulario">Pedir revisión inicial</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <section id="precios" className="section dark"><div className="wrap"><div className="section-head"><h2>Precios claros para empezar sin complicarte</h2><p className="copy">La auditoría inicial se descuenta si contratas el control mensual.</p></div><div className="grid3">{prices.map((plan)=><div className={`price ${plan.featured ? "featured" : ""}`} key={plan.name}><h3>{plan.name}</h3><div className="amount">{plan.price}</div><p>{plan.text}</p><ul>{plan.items.map((item)=><li key={item}>{item}</li>)}</ul><a className={`btn ${plan.featured ? "primary" : "secondary"}`} href="#formulario">Pedir revisión inicial</a></div>)}</div></div></section>
+      <section id="faq" className="section">
+        <div className="wrap faq">
+          <div className="section-head center">
+            <h2>Preguntas frecuentes</h2>
+          </div>
+          <div className="faq-grid">
+            {faqs.map(([question, answer]) => (
+              <article className="faq-item" key={question}>
+                <h3>{question}</h3>
+                <p>{answer}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <section id="faq" className="section"><div className="wrap faq"><div className="section-head center"><h2>Preguntas frecuentes</h2></div><div className="faq-grid">{faqs.map(([question,answer])=><article className="faq-item" key={question}><h3>{question}</h3><p>{answer}</p></article>)}</div></div></section>
+      <section id="formulario" className="section slate">
+        <div className="wrap formwrap">
+          <div>
+            <h2>Solicita tu auditoría de Dinero Dormido</h2>
+            <p className="copy">Cuéntanos qué te preocupa y te diremos qué muestra de datos necesitamos para empezar.</p>
+            <div className="aside-note">Lo técnico viene después. Primero queremos entender si hay facturas, presupuestos, trabajos o clientes que merezca la pena revisar.</div>
+          </div>
+          <form className="form" onSubmit={submit}>
+            <div className="fields">
+              <Field label="Nombre" />
+              <Field label="Empresa" />
+              <Field label="Email" type="email" />
+              <Field label="Teléfono" />
+              <Field label="Sector" />
+              <label>
+                <span>¿Qué te preocupa más?</span>
+                <select required defaultValue="Facturas pendientes">
+                  <option>Facturas pendientes</option>
+                  <option>Presupuestos sin seguimiento</option>
+                  <option>Trabajos sin facturar</option>
+                  <option>Clientes antiguos</option>
+                  <option>Desorden general</option>
+                  <option>No lo sé, quiero revisarlo</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Mensaje</span>
+              <textarea rows={5} placeholder="Ej. Enviamos muchos presupuestos y no siempre sabemos cuáles se siguen..." />
+            </label>
+            <button className="btn primary form-btn">Solicitar revisión</button>
+            <p className="privacy">Usaremos tus datos solo para responder a tu solicitud. Puedes empezar con información limitada o anonimizada.</p>
+            {sent && <div className="success-message">Solicitud recibida. Revisaremos si tu negocio encaja con la auditoría y qué muestra necesitamos para empezar.</div>}
+          </form>
+        </div>
+      </section>
 
-      <section id="formulario" className="section slate"><div className="wrap formwrap"><div><h2>Solicita tu revisión inicial</h2><p className="copy">Cuéntanos qué te preocupa y te diremos qué muestra de datos necesitamos para empezar.</p><div className="aside-note">Lo técnico viene después. Primero queremos entender si hay facturas, presupuestos, trabajos o clientes que merezca la pena revisar.</div></div><form className="form" onSubmit={submit}><div className="fields"><Field label="Nombre" /><Field label="Empresa" /><Field label="Email" type="email" /><Field label="Teléfono" /><Field label="Sector" /><label><span>¿Qué te preocupa más?</span><select required><option>Facturas pendientes</option><option>Presupuestos sin seguimiento</option><option>Trabajos sin facturar</option><option>Clientes antiguos</option><option>Desorden general</option><option>No lo sé, quiero revisarlo</option></select></label></div><label><span>Mensaje</span><textarea rows={5} placeholder="Ej. Enviamos muchos presupuestos y no siempre sabemos cuáles se siguen..." /></label><button className="btn primary form-btn">Pedir revisión inicial</button><p className="privacy">Usaremos tus datos solo para responder a tu solicitud. Puedes empezar con información limitada o anonimizada.</p>{sent && <div className="success">Solicitud recibida. Revisaremos si tu negocio encaja con la auditoría y qué muestra necesitamos para empezar.</div>}</form></div></section>
+      <footer>
+        <div className="wrap foot">
+          <div>
+            <Logo />
+            <p>Auditoría práctica para encontrar oportunidades entre facturas, presupuestos, trabajos y clientes olvidados.</p>
+          </div>
+          <div className="footlinks">
+            <a href="#detectamos">Qué encontramos</a>
+            <a href="#como-funciona">Cómo funciona</a>
+            <a href="#precios">Precios</a>
+            <a href="#formulario">Contacto</a>
+          </div>
+        </div>
+        <div className="legal">© 2026 Dinero Dormido. Todos los derechos reservados.</div>
+      </footer>
 
-      <footer><div className="wrap foot"><div><Logo /><p>Auditoría práctica para encontrar oportunidades entre facturas, presupuestos, trabajos y clientes olvidados.</p></div><div className="footlinks"><a href="#detectamos">Qué encontramos</a><a href="#como-funciona">Cómo funciona</a><a href="#precios">Precios</a><a href="#formulario">Contacto</a></div></div><div className="legal">© 2026 Dinero Dormido. Todos los derechos reservados.</div></footer><div className="sticky-cta"><a className="btn primary" href="#formulario">Pedir revisión inicial</a></div>
+      <div className="sticky-cta">
+        <a className="btn primary" href="#formulario">Pedir revisión inicial</a>
+      </div>
     </main>
   );
 }
 
+function ReportMockup({ type }: { type: ReportSlide["type"] }) {
+  if (type === "summary") {
+    return (
+      <div className="mock-grid">
+        {[
+          ["Facturas vencidas detectadas", "4"],
+          ["Importe pendiente", "3.870 €"],
+          ["Presupuestos sin seguimiento", "9"],
+          ["Valor estimado", "21.400 €"],
+          ["Trabajos sin facturar", "2"],
+          ["Clientes reactivables", "17"],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "invoices") {
+    return (
+      <div className="mock-table">
+        <div>
+          <b>Factura</b><b>Cliente</b><b>Importe</b><b>Vencimiento</b><b>Acción</b>
+        </div>
+        {[
+          ["F-104", "Cliente Norte", "1.240 €", "Hace 18 días", "Enviar recordatorio"],
+          ["F-108", "Bar Central", "890 €", "Hace 7 días", "Llamar"],
+          ["F-112", "Comunidad Sol", "1.740 €", "Hace 21 días", "Revisar pago"],
+        ].map((row) => (
+          <div key={row[0]}>
+            {row.map((cell) => <span key={cell}>{cell}</span>)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "quotes") {
+    return (
+      <div className="mock-cards">
+        {[
+          ["Presupuesto P-088", "4.800 €", "enviado hace 12 días", "sin seguimiento"],
+          ["Presupuesto P-102", "2.100 €", "enviado hace 8 días", "contactar hoy"],
+          ["Presupuesto P-115", "6.300 €", "enviado hace 20 días", "oportunidad caliente"],
+        ].map((row) => (
+          <div key={row[0]}>
+            <b>{row[0]}</b>
+            <strong>{row[1]}</strong>
+            <span>{row[2]}</span>
+            <em>{row[3]}</em>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "work") {
+    return (
+      <div className="mock-list">
+        {[
+          "Reparación caldera — Calle Mayor — terminado — sin factura asociada",
+          "Instalación aire acondicionado — Cliente López — aceptado — revisar emisión",
+          "Mantenimiento anual — Comunidad Sol — realizado — pendiente de facturar",
+        ].map((item) => <div key={item}>✓ {item}</div>)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mock-clients">
+      <div className="mock-list">
+        {[
+          "Restaurante Sol — revisión hace 11 meses",
+          "Comunidad Pinar — mantenimiento pendiente",
+          "Clínica Norte — servicio repetible",
+        ].map((item) => <div key={item}>✓ {item}</div>)}
+      </div>
+      <div className="message-box">Hola [Nombre], el año pasado realizamos [servicio]. Estamos revisando mantenimientos y quería saber si quieres que te reservemos una revisión.</div>
+    </div>
+  );
+}
+
 function Field({ label, type = "text" }: { label: string; type?: string }) {
-  return <label><span>{label}</span><input type={type} required /></label>;
+  return (
+    <label>
+      <span>{label}</span>
+      <input type={type} required />
+    </label>
+  );
 }
