@@ -1,63 +1,113 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 
-const faqs = [
-  ["¿Tengo que instalar algo?", "No. Para empezar solo necesitamos datos exportados o documentos."],
-  ["¿Tengo que cambiar de programa?", "No. Trabajamos con lo que ya usas."],
-  ["¿Y si mis datos están desordenados?", "Podemos empezar con una muestra. Si no hay datos suficientes, te diremos qué ordenar primero."],
-  ["¿Esto es un CRM?", "No. Empezamos revisando tus datos actuales para detectar oportunidades, sin pedir que tu equipo cambie de sistema."],
-  ["¿Qué recibo exactamente?", "Un informe con facturas pendientes, presupuestos sin seguimiento, posibles trabajos sin facturar, clientes reactivables y acciones recomendadas."]
+const findings = [
+  { title: "Facturas vencidas", text: "Importes pendientes que conviene reclamar antes de que se enfríen.", example: "F-104 · 1.240 € · vencida hace 18 días", tone: "alert" },
+  { title: "Presupuestos sin seguimiento", text: "Presupuestos enviados que nadie ha vuelto a perseguir.", example: "P-088 · 4.800 € · enviado hace 12 días", tone: "opportunity" },
+  { title: "Trabajos sin facturar", text: "Servicios terminados o aceptados que deberían revisarse contra factura.", example: "Trabajo terminado · sin factura asociada", tone: "teal" },
+  { title: "Clientes reactivables", text: "Clientes antiguos que podrían necesitar revisión, mantenimiento o recompra.", example: "Revisión hace 11 meses · contactar", tone: "success" }
 ];
 
-const metrics = [
-  ["Facturas vencidas", "4.250 €", "red"],
-  ["Presupuestos sin seguimiento", "11.700 €", "orange"],
-  ["Clientes reactivables", "8.900 €", "green"],
-  ["Trabajos sin facturar", "1.480 €", "cyan"]
+const steps = [
+  ["Nos pasas una muestra", "Facturas, presupuestos y clientes de los últimos meses. Puede ser Excel, PDF o export de tu programa."],
+  ["Revisamos y cruzamos datos", "Miramos fechas, importes, estados, clientes, presupuestos, trabajos y señales de seguimiento perdido."],
+  ["Te entregamos un informe claro", "Recibes una lista priorizada de oportunidades y acciones recomendadas para revisar."],
+  ["Decides si seguir", "Si tiene sentido, podemos convertirlo en control mensual o semanal."]
+];
+
+const dataTrust = [
+  "Puedes empezar con una muestra pequeña.",
+  "Puedes anonimizar nombres de clientes.",
+  "No necesitamos acceso permanente.",
+  "No sustituimos tu programa actual.",
+  "Solo revisamos la información necesaria para la auditoría.",
+  "Acuerdo de confidencialidad disponible si lo necesitas."
+];
+
+const fit = [
+  "Instaladores",
+  "Reformas técnicas",
+  "Mantenimiento",
+  "Climatización",
+  "Servicios B2B",
+  "Empresas con presupuestos de ticket medio/alto",
+  "Negocios que trabajan con WhatsApp, email, Excel o programa de facturación"
+];
+
+const prices = [
+  { name: "Auditoría inicial", price: "149 €", text: "Para detectar oportunidades y ver si tiene sentido seguir.", featured: true, items: ["Revisión de muestra", "Facturas vencidas", "Presupuestos dormidos", "Clientes reactivables", "Informe con acciones"] },
+  { name: "Control mensual", price: "desde 149 €/mes", text: "Para mantener el seguimiento activo cada mes.", featured: false, items: ["Revisión mensual", "Lista priorizada", "Mensajes listos", "Informe mensual", "Seguimiento recurrente"] },
+  { name: "Control semanal", price: "desde 299 €/mes", text: "Para empresas con más volumen.", featured: false, items: ["Revisión semanal", "Presupuestos calientes", "Facturas pendientes", "Soporte por email", "Reunión mensual"] }
+];
+
+const faqs = [
+  ["¿Tengo que instalar algo?", "No. Para empezar solo necesitamos datos exportados o documentos. Puedes empezar con una muestra pequeña."],
+  ["¿Tengo que cambiar de programa?", "No. Revisamos lo que ya usas: tu programa de facturación, Excel, PDFs, carpetas, emails o documentos exportados."],
+  ["¿Y si mis datos están desordenados?", "No pasa nada. Precisamente la auditoría sirve para saber si, aun con datos imperfectos, hay oportunidades claras que merece la pena revisar."],
+  ["¿Esto es un CRM?", "No. Un CRM exige que tu equipo lo use todos los días. Esto es una revisión práctica de datos actuales para detectar facturas, presupuestos, trabajos y clientes que requieren acción."],
+  ["¿Esto es una gestoría o recobros?", "No. No sustituimos a tu gestoría y no hacemos recobro agresivo. Te damos una lista clara de qué revisar, reclamar o seguir."],
+  ["¿Qué recibo exactamente?", "Un informe con oportunidades detectadas, importes estimados, prioridad y acciones recomendadas. El objetivo es que sepas qué mirar primero."],
+  ["¿Todo lo detectado es dinero cobrable inmediato?", "No siempre. Algunas partidas son facturas reclamables; otras son oportunidades comerciales o revisiones internas que conviene validar."],
+  ["¿Puedo anonimizar los datos?", "Sí. Para una primera muestra puedes ocultar nombres sensibles y dejar importes, fechas, estados y referencias suficientes para revisar el caso."]
 ];
 
 function Logo() {
-  return <a className="logo" href="#inicio"><span className="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="27" cy="27" r="18" fill="none" stroke="#00A7B5" strokeWidth="5.5"/><path d="M41 41L54 54" stroke="#00A7B5" strokeWidth="7" strokeLinecap="round"/><path d="M37 21.5C34.9 18.6 31.7 17 28 17C21.4 17 16.6 22.2 16.6 28.7C16.6 35.2 21.4 40.4 28 40.4C31.7 40.4 34.9 38.8 37 35.9" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round"/><path d="M13 27H28M13 33H26" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round"/></svg><span className="zzz">zZ</span></span><span><b>Dinero</b> <b>Dormido</b></span></a>;
+  return (
+    <a className="logo" href="#inicio" aria-label="Dinero Dormido">
+      <span className="mark">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="27" cy="27" r="18" fill="none" stroke="#00A7B5" strokeWidth="5.5" />
+          <path d="M41 41L54 54" stroke="#00A7B5" strokeWidth="7" strokeLinecap="round" />
+          <path d="M37 22C34.7 19 31.6 17.4 28 17.4C21.6 17.4 16.8 22.4 16.8 28.7C16.8 35 21.6 40 28 40C31.6 40 34.7 38.4 37 35.4" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
+          <path d="M13 27H28M13 33H26" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
+          <path d="M34 19h6l-6 5h6" stroke="#00A7B5" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span><b>Dinero</b> <b>Dormido</b></span>
+    </a>
+  );
 }
 
 export default function Home() {
   const [sent, setSent] = useState(false);
-  const [openFaq, setOpenFaq] = useState(0);
 
-  return <main id="inicio">
-    <header><div className="wrap nav"><Logo/><nav className="links"><a href="#detectamos">Qué detectamos</a><a href="#como-funciona">Cómo funciona</a><a href="#para-quien">Para quién es</a><a href="#precios">Precios</a><a href="#faq">FAQ</a></nav><a className="btn primary" href="#formulario">Solicitar auditoría</a></div></header>
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSent(true);
+  }
 
-    <section className="hero"><div className="wrap hero-grid"><div><h1 className="h1">Encuentra el dinero que se pierde entre tus facturas, presupuestos y clientes olvidados.</h1><p className="lead">Revisamos tus datos actuales y te entregamos una lista clara de facturas vencidas, presupuestos sin seguimiento, trabajos sin facturar y clientes que puedes reactivar.</p><div className="trust">✓ No tienes que instalar nada. No tienes que cambiar de programa. Empezamos con una muestra de tus datos.</div><div className="actions"><a className="btn primary" href="#formulario">Quiero revisar mi dinero dormido</a><a className="btn secondary" href="#como-funciona">Ver cómo funciona</a></div><div className="mini"><div>Menos memoria</div><div>Más sistema</div><div>Acciones claras</div></div></div><div className="dash"><div className="dash-top"><small>Dinero detectado este mes</small><div className="dash-total">26.330 €</div><div className="dash-grid">{metrics.map(([label,value])=><div className="dash-cell" key={label}><span>{label}</span><b>{value}</b></div>)}</div><div className="bar"><i/></div></div><div className="metric-grid">{metrics.map(([label,value,tone])=><div className={`metric ${tone}`} key={label}><small>{label}</small><b>{value}</b></div>)}</div><div className="today"><h3>Acciones recomendadas hoy</h3><div>1. Reclamar factura F-104</div><div>2. Llamar por presupuesto P-088</div><div>3. Revisar trabajo terminado en Calle Mayor</div><div>4. Contactar clientes con mantenimiento anual</div></div></div></div></section>
+  return (
+    <main id="inicio">
+      <header><div className="wrap nav"><Logo /><nav className="links"><a href="#detectamos">Qué encontramos</a><a href="#como-funciona">Cómo funciona</a><a href="#informe">Informe</a><a href="#precios">Precios</a><a href="#faq">FAQ</a></nav><a className="btn primary" href="#formulario">Pedir revisión inicial</a></div></header>
 
-    <section className="section"><div className="wrap"><h2>Tu empresa puede estar trabajando mucho y aun así perder dinero.</h2><p className="copy">En muchas pequeñas empresas, el seguimiento depende demasiado de la memoria del dueño, de WhatsApps sueltos, de Excels, de PDFs y de una administrativa saturada.</p><div className="grid3">{["Facturas que vencen y nadie reclama","Presupuestos que se envían y nadie vuelve a perseguir","Trabajos terminados que no se facturan a tiempo","Clientes antiguos que podrían volver a comprar","Pagos parciales o mal registrados","Oportunidades perdidas en WhatsApp, email o Excel"].map((x,i)=><div className="card" key={x}><div className="icon">{i+1}</div><h3>{x}</h3></div>)}</div><div className="statement"><b>No es falta de esfuerzo. Es falta de sistema.</b><p>El desorden también cuesta dinero.</p></div></div></section>
+      <section className="hero"><div className="wrap hero-grid"><div><h1 className="h1">Auditoría de dinero dormido para empresas que hacen presupuestos y facturan a clientes.</h1><p className="lead">Detectamos facturas vencidas, presupuestos sin seguimiento, trabajos sin facturar y clientes antiguos que puedes reactivar.</p><div className="trust">No tienes que instalar nada. No tienes que cambiar de programa. Empezamos con una muestra pequeña de tus datos.</div><div className="actions"><a className="btn primary big" href="#formulario">Pedir revisión inicial</a><a className="btn secondary big" href="#informe">Ver ejemplo de informe</a></div><p className="microcopy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización, servicios B2B y empresas con presupuestos de ticket medio/alto.</p></div><div className="dash"><div className="dash-top"><div className="dash-head"><small>Ejemplo de informe</small><span>Instalaciones</span></div><div className="dash-total">26.330 € <span>en oportunidades detectadas</span></div><p className="dash-note">Ejemplo basado en una empresa de instalaciones. No todo es dinero cobrable inmediato: algunas son oportunidades a revisar.</p></div><div className="summary-list">{[["Facturas vencidas","4.250 €","Reclamar primero"],["Presupuestos sin seguimiento","11.700 €","Llamada de seguimiento"],["Clientes reactivables","8.900 €","Campaña de mantenimiento"],["Trabajos sin facturar","1.480 €","Revisar emisión"]].map(([label,value,action])=><div className="summary-row" key={label}><div><span>{label}</span><b>{action}</b></div><strong>{value}</strong></div>)}</div></div></div></section>
 
-    <section id="detectamos" className="section soft"><div className="wrap"><h2>Qué puede encontrar Dinero Dormido en tu negocio</h2><p className="copy">Cruzamos facturas, presupuestos, clientes y estados de cobro para convertir el desorden en acciones claras.</p><div className="grid4">{[["Facturas vencidas","Detectamos facturas pendientes, vencidas o parcialmente pagadas para que sepas qué reclamar primero.","Factura F-104|Importe: 1.240 €|Vencida hace 18 días|Acción: enviar recordatorio","red"],["Presupuestos dormidos","Encontramos presupuestos enviados que no recibieron seguimiento y todavía pueden recuperarse.","Presupuesto P-088|Importe: 4.800 €|Enviado hace 12 días|Acción: llamada de seguimiento","orange"],["Trabajos sin facturar","Cruzamos trabajos, presupuestos aceptados y facturas para detectar servicios terminados que no se han cobrado.","Trabajo terminado|No aparece factura asociada|Acción: revisar emisión","cyan"],["Clientes reactivables","Buscamos clientes antiguos que podrían volver a comprar por mantenimiento, revisión o recompra.","Cliente hizo revisión hace 11 meses|Acción: ofrecer mantenimiento anual","green"]].map(([title,text,example,tone])=><article className="card" key={title}><div className={`icon ${tone}`}>€</div><h3>{title}</h3><p>{text}</p><div className="example">{example.split("|").map(x=><p key={x}>{x}</p>)}</div></article>)}</div></div></section>
+      <section className="section"><div className="wrap narrow"><h2>Cuando el seguimiento depende de la memoria, se escapan oportunidades.</h2><p className="copy">En empresas de instalaciones, reformas o mantenimiento es normal tener presupuestos enviados, trabajos terminados, facturas pendientes y clientes antiguos repartidos entre WhatsApp, Excel, PDFs y el programa de facturación.</p></div></section>
 
-    <section id="como-funciona" className="section"><div className="wrap"><h2 style={{textAlign:"center"}}>Cómo funciona en 4 pasos</h2><div className="steps">{["Nos pasas una muestra|Puedes empezar con facturas, presupuestos y clientes de los últimos meses.","Ordenamos y cruzamos datos|Revisamos fechas, importes, estados, clientes y posibles pagos pendientes.","Te entregamos un informe claro|Recibes dinero pendiente, oportunidades y acciones recomendadas.","Seguimiento mensual|Si aporta valor, revisamos cada mes para que nada quede olvidado."].map((s,i)=>{const [t,p]=s.split("|");return <div className="step" key={t}><div className="num">{i+1}</div><h3>{t}</h3><p>{p}</p></div>})}</div><p className="note">Cuanto más ordenados estén los datos, más automático será. Si están desordenados, empezamos con una auditoría manual.</p></div></section>
+      <section id="detectamos" className="section soft"><div className="wrap"><div className="section-head"><h2>Qué encontramos en la auditoría</h2><p className="copy">No prometemos magia. Revisamos señales concretas y las convertimos en una lista de acciones.</p></div><div className="grid4">{findings.map((item)=><article className="card" key={item.title}><div className={`icon ${item.tone}`}>€</div><h3>{item.title}</h3><p>{item.text}</p><div className="example">{item.example}</div></article>)}</div></div></section>
 
-    <section className="section slate"><div className="wrap"><h2>¿Qué necesitamos para empezar?</h2><p className="copy">No hace falta que tengas todo perfecto. Podemos empezar con una muestra y decirte si hay valor.</p><div className="grid3"><div className="card"><h3>Datos mínimos</h3><p>Facturas emitidas, presupuestos enviados, estado de cobro y lista de clientes si existe.</p></div><div className="card"><h3>Datos opcionales</h3><p>Trabajos terminados, extracto bancario, emails, notas, WhatsApp Business e histórico de ventas.</p></div><div className="card"><h3>Formatos aceptados</h3><p>Excel, CSV, PDF, export del programa de facturación, Google Drive, capturas o documentos sueltos.</p></div></div></div></section>
+      <section id="como-funciona" className="section"><div className="wrap"><div className="section-head center"><h2>Cómo funciona</h2><p className="copy">Una revisión acotada, pensada para saber rápido si hay valor antes de complicar nada.</p></div><div className="steps">{steps.map(([title,text],index)=><div className="step" key={title}><div className="num">{index+1}</div><h3>{title}</h3><p>{text}</p></div>)}</div></div></section>
 
-    <section className="section"><div className="wrap"><h2>Así se ve un informe de Dinero Dormido</h2><div className="report"><div className="report-panel"><div className="report-dark"><small>Informe resumido</small><h3 style={{fontSize:32,margin:"8px 0 0"}}>Acciones de esta semana</h3><div className="report-stats">{[["Dinero pendiente claro","3.870 €","4 facturas vencidas"],["Presupuestos a rescatar","21.400 €","9 sin seguimiento"],["Posible dinero sin facturar","2 casos","Trabajos sin factura"],["Clientes reactivables","17","Oportunidad de recompra"]].map(([a,b,c])=><div className="report-stat" key={a}><span>{a}</span><b>{b}</b><small>{c}</small></div>)}</div></div><div className="tags">{["Prioridad alta","Oportunidad caliente","Revisar hoy","Mensaje listo"].map(t=><span className="tag" key={t}>{t}</span>)}</div><div className="today"><h3>Acciones recomendadas esta semana</h3><div>Reclamar factura F-104</div><div>Llamar al cliente del presupuesto P-088</div><div>Revisar trabajo terminado en Calle Mayor</div><div>Escribir a clientes con mantenimiento anual pendiente</div></div></div><div className="messages"><div className="message"><h3>Factura vencida</h3><p>Hola [Nombre], te escribo por la factura [número] de [importe], con vencimiento el [fecha]. ¿Podrías confirmarme si el pago está programado? Gracias.</p></div><div className="message"><h3>Presupuesto sin respuesta</h3><p>Hola [Nombre], te escribo por el presupuesto que te enviamos sobre [servicio]. ¿Has podido revisarlo?</p></div><div className="message"><h3>Cliente antiguo</h3><p>Hola [Nombre], el año pasado realizamos [servicio]. Quería saber si quieres que te reservemos una revisión.</p></div></div></div></div></section>
+      <section className="section slate"><div className="wrap split"><div><h2>Tus datos, bajo control</h2><p className="copy">La auditoría está planteada para trabajar con la mínima información necesaria y sin acceso permanente a tu negocio.</p></div><div className="check-panel">{dataTrust.map((item)=><div className="check-row" key={item}>✓ {item}</div>)}</div></div></section>
 
-    <section id="para-quien" className="section soft"><div className="wrap"><h2>Pensado para empresas que trabajan con presupuestos, facturas y seguimiento comercial.</h2><p className="copy">Funciona mejor cuando hay ticket medio, presupuestos, clientes recurrentes y cierto desorden operativo.</p><div className="grid3"><div className="card"><h3>Encaja bien si</h3><Chips items={["Haces presupuestos","Facturas pendientes","Ticket medio +500 €","Clientes recurrentes","No usas CRM bien"]}/></div><div className="card"><h3>Sectores ideales</h3><Chips items={["Instaladores","Climatización","Electricistas","Reformas","Mantenimiento","Servicios B2B","Clínicas"]}/></div><div className="card"><h3>No es ideal para</h3><Chips items={["Ticket muy bajo","Pago inmediato","Sin datos mínimos","CRM perfecto"]}/></div></div></div></section>
+      <section className="section positioning"><div className="wrap"><h2>No somos un CRM. No somos una gestoría. No somos recobros.</h2><p className="copy strong-copy">Somos una auditoría práctica para encontrar oportunidades que ya existen en tu negocio:</p><div className="bullet-grid">{["facturas que deberías reclamar","presupuestos que deberías seguir","trabajos que deberías revisar","clientes que podrías volver a contactar"].map((item)=><div key={item}>✓ {item}</div>)}</div></div></section>
 
-    <section className="section"><div className="wrap"><h2 style={{textAlign:"center"}}>Lo que ganas no es otra app. Es control.</h2><div className="grid3">{["Cobrar antes|Sabrás qué facturas reclamar y cuándo hacerlo.","Perder menos presupuestos|Detectarás presupuestos enviados que nadie está siguiendo.","Facturar lo que ya está hecho|Encontrarás posibles trabajos terminados sin factura asociada.","Reactivar clientes antiguos|Volverás a contactar clientes que pueden repetir compra.","Ahorrar tiempo administrativo|Recibirás acciones priorizadas en vez de revisar todo manualmente.","Tener más tranquilidad|El seguimiento dejará de depender solo de tu memoria."].map(s=>{const[t,p]=s.split("|");return <div className="card" key={t}><h3>{t}</h3><p>{p}</p></div>})}</div></div></section>
+      <section id="informe" className="section"><div className="wrap report"><div className="report-panel"><div className="report-dark"><small>Ejemplo de informe</small><h2>Acciones recomendadas esta semana</h2><div className="report-stats">{[["Facturas vencidas","3.870 €","4 facturas a revisar"],["Presupuestos a rescatar","21.400 €","9 sin seguimiento"],["Trabajos sin facturar","2 casos","validación interna"],["Clientes reactivables","17","mantenimiento o recompra"]].map(([a,b,c])=><div key={a}><span>{a}</span><b>{b}</b><small>{c}</small></div>)}</div></div></div><div className="messages">{[["Reclamar factura F-104","Confirmar si el pago está programado y dejar fecha de seguimiento."],["Llamar por presupuesto P-088","Resolver dudas y decidir si sigue vivo o se descarta."],["Revisar trabajo terminado en Calle Mayor","Comprobar si existe factura asociada y estado de cobro."],["Contactar clientes con mantenimiento anual","Enviar mensaje breve para ofrecer revisión."]].map(([title,text])=><div className="message" key={title}><h3>{title}</h3><p>{text}</p></div>)}</div></div></section>
 
-    <section id="precios" className="section dark"><div className="wrap"><h2>Empieza con una auditoría sencilla</h2><p className="copy">Sin comisiones agresivas sobre tus ventas. Trabajamos con cuota fija para que el coste sea claro desde el principio.</p><div className="grid3">{[["Auditoría inicial","149 €","Para descubrir si tienes dinero dormido.","featured"],["Control mensual","149 €/mes","Para revisar oportunidades cada mes.",""],["Control semanal","299 €/mes","Para empresas con más volumen.",""]].map(([n,p,t,c])=><div className={`price ${c}`} key={n}><h3>{n}</h3><div className="amount">{p}</div><p>{t}</p><ul><li>Revisión de facturas</li><li>Presupuestos a seguir</li><li>Clientes reactivables</li><li>Informe con acciones</li></ul><a className="btn primary" href="#formulario">Solicitar auditoría</a></div>)}</div></div></section>
+      <section id="para-quien" className="section soft"><div className="wrap split"><div><h2>Para quién encaja</h2><p className="copy">Funciona mejor cuando vendes con presupuesto, tienes ticket medio/alto y el seguimiento comercial no está perfectamente ordenado.</p></div><div className="chips">{fit.map((item)=><span key={item}>{item}</span>)}</div></div></section>
 
-    <section id="faq" className="section"><div className="wrap faq"><h2 style={{textAlign:"center"}}>Preguntas frecuentes</h2>{faqs.map(([q,a],i)=><div className="faq-item" key={q}><button className="faq-q" onClick={()=>setOpenFaq(openFaq===i?-1:i)}>{q}</button>{openFaq===i && <p className="faq-a">{a}</p>}</div>)}</div></section>
+      <section id="precios" className="section dark"><div className="wrap"><div className="section-head"><h2>Precios claros para empezar sin complicarte</h2><p className="copy">La auditoría inicial se descuenta si contratas el control mensual.</p></div><div className="grid3">{prices.map((plan)=><div className={`price ${plan.featured ? "featured" : ""}`} key={plan.name}><h3>{plan.name}</h3><div className="amount">{plan.price}</div><p>{plan.text}</p><ul>{plan.items.map((item)=><li key={item}>{item}</li>)}</ul><a className={`btn ${plan.featured ? "primary" : "secondary"}`} href="#formulario">Pedir revisión inicial</a></div>)}</div></div></section>
 
-    <section className="section soft"><div className="wrap"><h2>Descarga el checklist de dinero dormido</h2><p className="copy">12 señales de que podrías estar perdiendo dinero por falta de seguimiento.</p><a className="btn primary" href="#formulario">Quiero el checklist</a><div className="checkgrid">{["Facturas vencidas sin reclamar","Presupuestos enviados sin seguimiento","Trabajos terminados sin factura","Clientes antiguos sin contacto","Pagos parciales mal registrados","Mantenimientos anuales olvidados"].map(x=><div className="checkitem" key={x}>✓ {x}</div>)}</div></div></section>
+      <section id="faq" className="section"><div className="wrap faq"><div className="section-head center"><h2>Preguntas frecuentes</h2></div><div className="faq-grid">{faqs.map(([question,answer])=><article className="faq-item" key={question}><h3>{question}</h3><p>{answer}</p></article>)}</div></div></section>
 
-    <section id="formulario" className="section"><div className="wrap formwrap"><div><h2>Solicita tu auditoría de Dinero Dormido</h2><p className="copy">Cuéntanos cómo trabajas y te diremos qué datos necesitamos para empezar.</p><div className="today"><div>No necesitas más software. Necesitas saber qué dinero se está quedando sin seguimiento.</div><div>Tus facturas, presupuestos y clientes ya contienen oportunidades. Nosotros las ordenamos.</div><div>Cada mes sabrás qué reclamar, qué presupuestos perseguir y qué clientes llamar.</div></div></div><form className="form" onSubmit={(e)=>{e.preventDefault();setSent(true)}}><div className="fields"><Field label="Nombre"/><Field label="Empresa"/><Field label="Email" type="email"/><Field label="Teléfono"/><Field label="Sector"/><Field label="Programa de facturación"/><Select label="¿Haces presupuestos?" items={["Sí","No"]}/><Select label="Facturas al mes" items={["1-10","11-30","31-80","Más de 80"]}/><Select label="Presupuestos al mes" items={["1-10","11-30","31-80","Más de 80"]}/><Select label="Qué te preocupa más" items={["Facturas pendientes","Presupuestos sin seguimiento","Trabajos sin facturar","Clientes antiguos","Desorden general"]}/></div><label><span style={{marginTop:14}}>Cuéntanos brevemente tu situación</span><textarea rows={5}/></label><button className="btn primary" style={{width:"100%",marginTop:18}}>Solicitar revisión</button><p className="privacy">Usaremos tus datos solo para responder a tu solicitud.</p>{sent && <div className="success">Solicitud recibida. El siguiente paso será revisar si tu negocio encaja con la auditoría.</div>}</form></div></section>
+      <section id="formulario" className="section slate"><div className="wrap formwrap"><div><h2>Solicita tu revisión inicial</h2><p className="copy">Cuéntanos qué te preocupa y te diremos qué muestra de datos necesitamos para empezar.</p><div className="aside-note">Lo técnico viene después. Primero queremos entender si hay facturas, presupuestos, trabajos o clientes que merezca la pena revisar.</div></div><form className="form" onSubmit={submit}><div className="fields"><Field label="Nombre" /><Field label="Empresa" /><Field label="Email" type="email" /><Field label="Teléfono" /><Field label="Sector" /><label><span>¿Qué te preocupa más?</span><select required><option>Facturas pendientes</option><option>Presupuestos sin seguimiento</option><option>Trabajos sin facturar</option><option>Clientes antiguos</option><option>Desorden general</option><option>No lo sé, quiero revisarlo</option></select></label></div><label><span>Mensaje</span><textarea rows={5} placeholder="Ej. Enviamos muchos presupuestos y no siempre sabemos cuáles se siguen..." /></label><button className="btn primary form-btn">Pedir revisión inicial</button><p className="privacy">Usaremos tus datos solo para responder a tu solicitud. Puedes empezar con información limitada o anonimizada.</p>{sent && <div className="success">Solicitud recibida. Revisaremos si tu negocio encaja con la auditoría y qué muestra necesitamos para empezar.</div>}</form></div></section>
 
-    <section className="section"><div className="wrap"><div className="statement"><b>¿Quieres saber si tienes dinero dormido en tu empresa?</b><p>Empieza con una auditoría clara y descubre qué oportunidades tienes pendientes.</p><a className="btn secondary" href="#formulario">Quiero revisar mi dinero dormido</a></div></div></section>
-
-    <footer><div className="wrap foot"><div><Logo/><p className="copy">Encuentra el dinero que se pierde entre facturas, presupuestos y clientes olvidados.</p><p>© 2026 Dinero Dormido. Todos los derechos reservados.</p></div><div className="footlinks"><a href="#detectamos">Qué detectamos</a><a href="#como-funciona">Cómo funciona</a><a href="#precios">Precios</a><a href="#faq">FAQ</a><a href="#formulario">Contacto</a></div></div></footer><div className="sticky"><a className="btn primary" href="#formulario">Solicitar auditoría</a></div>
-  </main>;
+      <footer><div className="wrap foot"><div><Logo /><p>Auditoría práctica para encontrar oportunidades entre facturas, presupuestos, trabajos y clientes olvidados.</p></div><div className="footlinks"><a href="#detectamos">Qué encontramos</a><a href="#como-funciona">Cómo funciona</a><a href="#precios">Precios</a><a href="#formulario">Contacto</a></div></div><div className="legal">© 2026 Dinero Dormido. Todos los derechos reservados.</div></footer><div className="sticky-cta"><a className="btn primary" href="#formulario">Pedir revisión inicial</a></div>
+    </main>
+  );
 }
 
-function Chips({items}:{items:string[]}){return <div className="chips">{items.map(x=><span className="chip" key={x}>{x}</span>)}</div>}
-function Field({label,type="text"}:{label:string;type?:string}){return <label><span>{label}</span><input type={type} required/></label>}
-function Select({label,items}:{label:string;items:string[]}){return <label><span>{label}</span><select>{items.map(x=><option key={x}>{x}</option>)}</select></label>}
+function Field({ label, type = "text" }: { label: string; type?: string }) {
+  return <label><span>{label}</span><input type={type} required /></label>;
+}
