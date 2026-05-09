@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -18,6 +19,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 type ReportType = "summary" | "invoices" | "quotes" | "work" | "clients";
+
+const DEMO_DURATION_SECONDS = 60;
 
 const findings = [
   {
@@ -188,6 +191,7 @@ function Logo() {
 
 export default function Home() {
   const [sent, setSent] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -332,10 +336,24 @@ export default function Home() {
             <h2>Preguntas frecuentes</h2>
           </div>
           <div className="faq-grid">
-            {faqs.map(([question, answer]) => (
-              <article className="faq-item" key={question}>
-                <h3>{question}</h3>
-                <p>{answer}</p>
+            {faqs.map(([question, answer], index) => (
+              <article className={`faq-item ${openFaq === index ? "open" : ""}`} key={question}>
+                <button onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index}>
+                  <span>{question}</span>
+                  <ChevronDown size={20} />
+                </button>
+                <AnimatePresence initial={false}>
+                  {openFaq === index && (
+                    <motion.p
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: .22 }}
+                    >
+                      {answer}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </article>
             ))}
           </div>
@@ -437,18 +455,39 @@ function HeroDashboard() {
 
 function DemoSection() {
   const [playing, setPlaying] = useState(false);
-  const [active, setActive] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     if (!playing) return;
     const timer = window.setInterval(() => {
-      setActive((current) => (current + 1) % demoSteps.length);
-    }, 1650);
+      setElapsed((current) => Math.min(DEMO_DURATION_SECONDS, current + 1));
+    }, 1000);
     return () => window.clearInterval(timer);
   }, [playing]);
 
+  useEffect(() => {
+    if (elapsed >= DEMO_DURATION_SECONDS) {
+      setPlaying(false);
+    }
+  }, [elapsed]);
+
+  const active = Math.min(demoSteps.length - 1, Math.floor((elapsed / DEMO_DURATION_SECONDS) * demoSteps.length));
+  const remaining = DEMO_DURATION_SECONDS - elapsed;
   const current = demoSteps[active];
   const CurrentIcon = current.icon;
+
+  function formatTime(seconds: number) {
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return `${minutes}:${rest.toString().padStart(2, "0")}`;
+  }
+
+  function playDemo() {
+    if (elapsed >= DEMO_DURATION_SECONDS) {
+      setElapsed(0);
+    }
+    setPlaying(true);
+  }
 
   return (
     <section id="demo" className="section demo-section">
@@ -458,7 +497,7 @@ function DemoSection() {
           <p className="copy">No es otra app más. Es una revisión práctica que convierte facturas, presupuestos y clientes olvidados en acciones claras.</p>
           <div className="demo-points">
             {demoSteps.map((step, index) => (
-              <button key={step.title} className={index === active ? "active" : ""} onClick={() => { setPlaying(true); setActive(index); }}>
+              <button key={step.title} className={index === active ? "active" : ""} onClick={() => { setElapsed(index * (DEMO_DURATION_SECONDS / demoSteps.length)); setPlaying(true); }}>
                 <span>{index + 1}</span>
                 {step.title}
               </button>
@@ -468,7 +507,7 @@ function DemoSection() {
         <div className="video-mockup">
           <div className="video-top">
             <span>Demo auditoría</span>
-            <b>0:58</b>
+            <b>{formatTime(remaining)}</b>
           </div>
           <div className="video-screen">
             <AnimatePresence mode="wait">
@@ -487,13 +526,13 @@ function DemoSection() {
               </motion.div>
             </AnimatePresence>
             {!playing && (
-              <button className="play-button" onClick={() => setPlaying(true)} aria-label="Reproducir demo">
+              <button className="play-button" onClick={playDemo} aria-label="Reproducir demo">
                 <Play size={38} fill="currentColor" />
               </button>
             )}
           </div>
           <div className="video-progress" aria-hidden="true">
-            <motion.div animate={{ width: `${((active + 1) / demoSteps.length) * 100}%` }} transition={{ duration: .45 }} />
+            <motion.div animate={{ width: `${(elapsed / DEMO_DURATION_SECONDS) * 100}%` }} transition={{ duration: .45 }} />
           </div>
         </div>
       </div>
