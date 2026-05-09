@@ -96,7 +96,15 @@ export async function POST(request: NextRequest) {
         hasResendApiKey: Boolean(resendApiKey),
       });
       return NextResponse.json(
-        { success: false, error: "Configuración incompleta" },
+        {
+          success: false,
+          error: "Configuración incompleta",
+          debug: {
+            hasSupabaseUrl: Boolean(supabaseUrl),
+            hasSupabaseServiceRoleKey: Boolean(supabaseServiceRoleKey),
+            hasResendApiKey: Boolean(resendApiKey),
+          },
+        },
         { status: 500 },
       );
     }
@@ -127,7 +135,16 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error("Supabase lead insert failed", insertError);
       return NextResponse.json(
-        { success: false, error: "No se pudo guardar el lead" },
+        {
+          success: false,
+          error: "No se pudo guardar el lead",
+          debug: {
+            code: insertError.code,
+            message: insertError.message,
+            details: insertError.details,
+            hint: insertError.hint,
+          },
+        },
         { status: 500 },
       );
     }
@@ -184,7 +201,7 @@ export async function POST(request: NextRequest) {
     if (emailError) {
       console.error("Resend lead email failed", emailError);
       return NextResponse.json(
-        { success: false, error: "No se pudo enviar el email" },
+        { success: false, error: "No se pudo enviar el email", debug: emailError },
         { status: 500 },
       );
     }
@@ -193,7 +210,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Lead form request failed", error);
     return NextResponse.json(
-      { success: false, error: "Error inesperado" },
+      {
+        success: false,
+        error: "Error inesperado",
+        debug: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }
