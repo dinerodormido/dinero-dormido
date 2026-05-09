@@ -1,38 +1,80 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Play,
+  ReceiptText,
+  Search,
+  Send,
+  ShieldCheck,
+  UploadCloud,
+} from "lucide-react";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 
-type ReportSlide = {
-  eyebrow: string;
-  title: string;
-  text: string;
-  type: "summary" | "invoices" | "quotes" | "work" | "clients";
-};
+type ReportType = "summary" | "invoices" | "quotes" | "work" | "clients";
 
 const findings = [
   {
+    icon: ReceiptText,
     title: "Facturas vencidas",
     text: "Detectamos facturas pendientes, vencidas o parcialmente pagadas para que sepas qué reclamar primero.",
     example: "F-104 · 1.240 € · vencida hace 18 días",
     tone: "alert",
   },
   {
+    icon: Search,
     title: "Presupuestos dormidos",
     text: "Encontramos presupuestos enviados que no recibieron seguimiento y todavía pueden recuperarse.",
     example: "P-088 · 4.800 € · enviado hace 12 días",
     tone: "opportunity",
   },
   {
+    icon: FileText,
     title: "Trabajos sin facturar",
     text: "Cruzamos trabajos, presupuestos aceptados y facturas para detectar servicios terminados que no se han cobrado.",
     example: "Trabajo terminado · sin factura asociada",
     tone: "teal",
   },
   {
+    icon: Send,
     title: "Clientes reactivables",
     text: "Buscamos clientes antiguos que podrían volver a comprar por mantenimiento, revisión o recompra.",
     example: "Revisión hace 11 meses · contactar",
     tone: "success-tone",
+  },
+];
+
+const demoSteps = [
+  {
+    title: "Subes una muestra",
+    text: "Facturas, presupuestos y clientes. Puede ser un export, Excel o PDFs.",
+    icon: UploadCloud,
+  },
+  {
+    title: "Detectamos vencidos",
+    text: "Aparecen facturas vencidas, pagos pendientes y prioridades de reclamación.",
+    icon: ReceiptText,
+  },
+  {
+    title: "Encontramos presupuestos dormidos",
+    text: "Presupuestos enviados sin respuesta, ordenados por importe y fecha.",
+    icon: Search,
+  },
+  {
+    title: "Revisamos trabajos sin facturar",
+    text: "Cruzamos trabajos terminados, aceptados y facturas emitidas.",
+    icon: FileText,
+  },
+  {
+    title: "Recibes acciones claras",
+    text: "Informe con prioridades, mensajes listos y próximos pasos.",
+    icon: CheckCircle2,
   },
 ];
 
@@ -43,32 +85,37 @@ const steps = [
   ["Decides si seguir", "Si aporta valor, lo convertimos en control mensual o semanal para que nada vuelva a quedar olvidado."],
 ];
 
-const reportSlides: ReportSlide[] = [
+const reportSlides: { tab: string; eyebrow: string; title: string; text: string; type: ReportType }[] = [
   {
+    tab: "Resumen",
     eyebrow: "Resumen ejecutivo",
     title: "Una foto clara de dónde mirar primero",
-    text: "Empiezas viendo una foto clara de dónde está el dinero pendiente y qué oportunidades merece la pena revisar primero.",
+    text: "Una foto clara de dónde está el dinero pendiente y qué oportunidades merece la pena revisar primero.",
     type: "summary",
   },
   {
+    tab: "Facturas",
     eyebrow: "Facturas vencidas",
     title: "Qué reclamar y en qué orden",
     text: "El informe te dice qué facturas deberías reclamar y en qué orden.",
     type: "invoices",
   },
   {
+    tab: "Presupuestos",
     eyebrow: "Presupuestos dormidos",
     title: "Presupuestos que nadie volvió a perseguir",
-    text: "También detectamos presupuestos que se enviaron pero nadie volvió a perseguir.",
+    text: "Detectamos presupuestos que se enviaron pero nadie volvió a perseguir.",
     type: "quotes",
   },
   {
+    tab: "Trabajos",
     eyebrow: "Trabajos sin facturar",
     title: "Servicios hechos que conviene revisar",
     text: "Cruzamos trabajos, presupuestos aceptados y facturas para detectar posibles servicios ya realizados que todavía no se han cobrado.",
     type: "work",
   },
   {
+    tab: "Clientes",
     eyebrow: "Clientes reactivables + mensajes listos",
     title: "Acciones concretas para contactar",
     text: "No solo señalamos oportunidades. También damos acciones concretas y mensajes listos para enviar.",
@@ -122,50 +169,29 @@ const faqs = [
 
 function Logo() {
   return (
-    <a className="logo" href="#inicio" aria-label="Dinero Dormido">
+    <Link className="logo" href="/#inicio" aria-label="Dinero Dormido">
       <span className="mark">
         <svg viewBox="0 0 64 64" aria-hidden="true">
           <circle cx="27" cy="27" r="18" fill="none" stroke="#00A7B5" strokeWidth="5.5" />
           <path d="M41 41L54 54" stroke="#00A7B5" strokeWidth="7" strokeLinecap="round" />
           <path d="M37 22C34.7 19 31.6 17.4 28 17.4C21.6 17.4 16.8 22.4 16.8 28.7C16.8 35 21.6 40 28 40C31.6 40 34.7 38.4 37 35.4" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
           <path d="M13 27H28M13 33H26" stroke="#08265C" strokeWidth="4.8" strokeLinecap="round" />
-          <path d="M36 19h5l-5 4h5" stroke="#00A7B5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity=".75" />
+          <path d="M36 19h5l-5 4h5" stroke="#00A7B5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity=".7" />
         </svg>
       </span>
       <span>
         <b>Dinero</b> <b>Dormido</b>
       </span>
-    </a>
-  );
-}
-
-function Chevron({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 6l6 6-6 6"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    </Link>
   );
 }
 
 export default function Home() {
   const [sent, setSent] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const slide = reportSlides[activeSlide];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSent(true);
-  }
-
-  function goToSlide(nextIndex: number) {
-    setActiveSlide((nextIndex + reportSlides.length) % reportSlides.length);
   }
 
   return (
@@ -176,6 +202,7 @@ export default function Home() {
           <nav className="links" aria-label="Navegación principal">
             <a href="#detectamos">Qué encontramos</a>
             <a href="#como-funciona">Cómo funciona</a>
+            <a href="#demo">Demo</a>
             <a href="#informe">Informe</a>
             <a href="#precios">Precios</a>
             <a href="#faq">FAQ</a>
@@ -192,38 +219,15 @@ export default function Home() {
             <div className="trust">No tienes que instalar nada. No tienes que cambiar de programa. Empezamos con una muestra pequeña de tus datos.</div>
             <div className="actions">
               <a className="btn primary big" href="#formulario">Pedir revisión inicial</a>
-              <a className="btn secondary big" href="#informe">Ver ejemplo de informe</a>
+              <a className="btn secondary big" href="#demo">Ver cómo funciona</a>
             </div>
             <p className="microcopy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización, servicios B2B y empresas con presupuestos de ticket medio/alto.</p>
           </div>
-          <div className="dash" aria-label="Ejemplo de informe de Dinero Dormido">
-            <div className="dash-top">
-              <div className="dash-head">
-                <small>Ejemplo de informe</small>
-                <span>Empresa de instalaciones</span>
-              </div>
-              <div className="dash-total">26.330 € <span>en oportunidades detectadas</span></div>
-              <p className="dash-note">Ejemplo basado en una empresa de instalaciones. No todo es dinero cobrable inmediato: algunas son oportunidades a revisar.</p>
-            </div>
-            <div className="summary-list">
-              {[
-                ["Facturas vencidas", "4.250 €", "Reclamar primero"],
-                ["Presupuestos sin seguimiento", "11.700 €", "Llamada de seguimiento"],
-                ["Clientes reactivables", "8.900 €", "Campaña de mantenimiento"],
-                ["Trabajos sin facturar", "1.480 €", "Revisar emisión"],
-              ].map(([label, value, action]) => (
-                <div className="summary-row" key={label}>
-                  <div>
-                    <span>{label}</span>
-                    <b>{action}</b>
-                  </div>
-                  <strong>{value}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
+          <HeroDashboard />
         </div>
       </section>
+
+      <DemoSection />
 
       <section className="section problem">
         <div className="wrap narrow">
@@ -240,14 +244,17 @@ export default function Home() {
             <p className="copy">Cruzamos facturas, presupuestos, clientes y estados de cobro para convertir el desorden en acciones claras.</p>
           </div>
           <div className="grid4">
-            {findings.map((item) => (
-              <article className="card" key={item.title}>
-                <div className={`icon ${item.tone}`}>€</div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-                <div className="example">{item.example}</div>
-              </article>
-            ))}
+            {findings.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article className="card" key={item.title}>
+                  <div className={`icon ${item.tone}`}><Icon size={21} /></div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  <div className="example">{item.example}</div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -270,56 +277,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="informe" className="section report-section">
-        <div className="wrap">
-          <div className="section-head center">
-            <h2>Así se ve un informe de Dinero Dormido</h2>
-            <p className="copy">No recibes teoría ni gráficos vacíos. Recibes un informe claro con dinero pendiente, oportunidades detectadas y acciones concretas para actuar.</p>
-          </div>
-          <div className="report-carousel">
-            <button className="arrow" aria-label="Ver informe anterior" onClick={() => goToSlide(activeSlide - 1)}>
-              <Chevron direction="left" />
-            </button>
-            <div className="slide-stage" key={slide.eyebrow}>
-              <div className="pdf-mockup">
-                <div className="pdf-top">
-                  <span>Dinero Dormido</span>
-                  <b>{slide.eyebrow}</b>
-                </div>
-                <ReportMockup type={slide.type} />
-              </div>
-              <aside className="slide-copy">
-                <span>{slide.eyebrow}</span>
-                <h3>{slide.title}</h3>
-                <p>{slide.text}</p>
-              </aside>
-            </div>
-            <button className="arrow" aria-label="Ver informe siguiente" onClick={() => goToSlide(activeSlide + 1)}>
-              <Chevron direction="right" />
-            </button>
-          </div>
-          <div className="dots" aria-label="Seleccionar parte del informe">
-            {reportSlides.map((item, index) => (
-              <button
-                key={item.eyebrow}
-                aria-label={item.eyebrow}
-                className={index === activeSlide ? "active" : ""}
-                onClick={() => setActiveSlide(index)}
-              />
-            ))}
-          </div>
-          <div className="report-cta">
-            <h3>¿Quieres una revisión así para tu empresa?</h3>
-            <p>Empieza con una auditoría inicial y descubre qué dinero pendiente, presupuestos olvidados y clientes reactivables tienes ahora mismo.</p>
-            <a className="btn primary big" href="#formulario">Solicitar auditoría</a>
-          </div>
-        </div>
-      </section>
+      <ReportSection />
 
-      <section className="section fit-brief">
-        <div className="wrap narrow">
-          <h2>Ideal para negocios con presupuestos y seguimiento comercial</h2>
-          <p className="copy">Pensado para instaladores, reformas técnicas, mantenimiento, climatización y servicios B2B con ticket medio/alto y procesos que hoy dependen demasiado de WhatsApp, email, Excel o memoria.</p>
+      <section className="ideal-band">
+        <div className="wrap">
+          <p>Ideal para instaladores, reformas técnicas, mantenimiento, climatización y servicios B2B con presupuestos de ticket medio/alto.</p>
         </div>
       </section>
 
@@ -329,13 +291,14 @@ export default function Home() {
             <h2>Tus datos, bajo control</h2>
             <p className="copy">La auditoría está planteada para trabajar con la mínima información necesaria y sin acceso permanente a tu negocio.</p>
             <div className="positioning-box">
+              <ShieldCheck size={24} />
               <h3>No somos un CRM. No somos una gestoría. No somos recobros.</h3>
               <p>Somos una auditoría práctica para encontrar oportunidades que ya existen: facturas que deberías reclamar, presupuestos que deberías seguir, trabajos que deberías revisar y clientes que podrías volver a contactar.</p>
             </div>
           </div>
           <div className="check-panel">
             {dataTrust.map((item) => (
-              <div className="check-row" key={item}>✓ {item}</div>
+              <div className="check-row" key={item}><CheckCircle2 size={18} /> {item}</div>
             ))}
           </div>
         </div>
@@ -425,6 +388,8 @@ export default function Home() {
           <div className="footlinks">
             <a href="#detectamos">Qué encontramos</a>
             <a href="#como-funciona">Cómo funciona</a>
+            <a href="#demo">Demo</a>
+            <a href="#informe">Informe</a>
             <a href="#precios">Precios</a>
             <a href="#formulario">Contacto</a>
           </div>
@@ -439,7 +404,188 @@ export default function Home() {
   );
 }
 
-function ReportMockup({ type }: { type: ReportSlide["type"] }) {
+function HeroDashboard() {
+  return (
+    <div className="dash" aria-label="Ejemplo de informe de Dinero Dormido">
+      <div className="dash-top">
+        <div className="dash-head">
+          <small>Ejemplo de informe</small>
+          <span>Empresa de instalaciones</span>
+        </div>
+        <div className="dash-total">26.330 € <span>en oportunidades detectadas</span></div>
+        <p className="dash-note">Ejemplo basado en una empresa de instalaciones. No todo es dinero cobrable inmediato: algunas son oportunidades a revisar.</p>
+      </div>
+      <div className="summary-list">
+        {[
+          ["Facturas vencidas", "4.250 €", "Reclamar primero"],
+          ["Presupuestos sin seguimiento", "11.700 €", "Llamada de seguimiento"],
+          ["Clientes reactivables", "8.900 €", "Campaña de mantenimiento"],
+          ["Trabajos sin facturar", "1.480 €", "Revisar emisión"],
+        ].map(([label, value, action]) => (
+          <div className="summary-row" key={label}>
+            <div>
+              <span>{label}</span>
+              <b>{action}</b>
+            </div>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DemoSection() {
+  const [playing, setPlaying] = useState(false);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % demoSteps.length);
+    }, 1650);
+    return () => window.clearInterval(timer);
+  }, [playing]);
+
+  const current = demoSteps[active];
+  const CurrentIcon = current.icon;
+
+  return (
+    <section id="demo" className="section demo-section">
+      <div className="wrap demo-layout">
+        <div>
+          <h2>Mira cómo funciona en 60 segundos</h2>
+          <p className="copy">No es otra app más. Es una revisión práctica que convierte facturas, presupuestos y clientes olvidados en acciones claras.</p>
+          <div className="demo-points">
+            {demoSteps.map((step, index) => (
+              <button key={step.title} className={index === active ? "active" : ""} onClick={() => { setPlaying(true); setActive(index); }}>
+                <span>{index + 1}</span>
+                {step.title}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="video-mockup">
+          <div className="video-top">
+            <span>Demo auditoría</span>
+            <b>0:58</b>
+          </div>
+          <div className="video-screen">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -18 }}
+                transition={{ duration: 0.32 }}
+                className="video-card"
+              >
+                <div className="video-icon"><CurrentIcon size={30} /></div>
+                <span>Paso {active + 1}</span>
+                <h3>{current.title}</h3>
+                <p>{current.text}</p>
+              </motion.div>
+            </AnimatePresence>
+            {!playing && (
+              <button className="play-button" onClick={() => setPlaying(true)} aria-label="Reproducir demo">
+                <Play size={38} fill="currentColor" />
+              </button>
+            )}
+          </div>
+          <div className="video-progress" aria-hidden="true">
+            <motion.div animate={{ width: `${((active + 1) / demoSteps.length) * 100}%` }} transition={{ duration: .45 }} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReportSection() {
+  const [selected, setSelected] = useState(0);
+  const slide = reportSlides[selected];
+
+  function goToSlide(index: number) {
+    setSelected((index + reportSlides.length) % reportSlides.length);
+  }
+
+  return (
+    <section id="informe" className="section report-section">
+      <div className="wrap">
+        <div className="section-head center">
+          <h2>Así se ve un informe de Dinero Dormido</h2>
+          <p className="copy">No recibes teoría ni gráficos vacíos. Recibes un informe claro con dinero pendiente, oportunidades detectadas y acciones concretas para actuar.</p>
+        </div>
+
+        <div className="report-shell">
+          <div className="report-tabs" role="tablist" aria-label="Apartados del informe">
+            {reportSlides.map((slide, index) => (
+              <button key={slide.tab} className={selected === index ? "active" : ""} onClick={() => goToSlide(index)}>
+                {slide.tab}
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              className="report-slide"
+              key={slide.eyebrow}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -18 }}
+              transition={{ duration: .28 }}
+            >
+              <div className="pdf-mockup">
+                <div className="pdf-toolbar">
+                  <span>Informe Dinero Dormido</span>
+                  <b>{slide.eyebrow}</b>
+                </div>
+                <div className="pdf-page">
+                  <div className="pdf-brand">
+                    <FileText size={18} />
+                    <span>Auditoría inicial · Empresa de instalaciones</span>
+                  </div>
+                  <ReportMockup type={slide.type} />
+                </div>
+              </div>
+              <aside className="slide-copy">
+                <span>{slide.eyebrow}</span>
+                <h3>{slide.title}</h3>
+                <p>{slide.text}</p>
+              </aside>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="report-nav">
+            <button aria-label="Apartado anterior" onClick={() => goToSlide(selected - 1)}><ChevronLeft size={22} /></button>
+            <div className="dots" aria-label="Seleccionar parte del informe">
+              {reportSlides.map((item, index) => (
+                <button
+                  key={item.eyebrow}
+                  aria-label={item.eyebrow}
+                  className={index === selected ? "active" : ""}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
+            </div>
+            <button aria-label="Apartado siguiente" onClick={() => goToSlide(selected + 1)}><ChevronRight size={22} /></button>
+          </div>
+        </div>
+
+        <div className="report-cta">
+          <h3>¿Quieres una revisión así para tu empresa?</h3>
+          <p>Empieza con una auditoría inicial y descubre qué dinero pendiente, presupuestos olvidados y clientes reactivables tienes ahora mismo.</p>
+          <div className="actions center-actions">
+            <a className="btn primary big" href="#formulario">Pedir revisión inicial</a>
+            <Link className="btn secondary big" href="/informe-demo">Ver informe demo <ArrowRight size={18} /></Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReportMockup({ type }: { type: ReportType }) {
   if (type === "summary") {
     return (
       <div className="mock-grid">
