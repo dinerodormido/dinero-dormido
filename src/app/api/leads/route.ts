@@ -19,6 +19,34 @@ function optionalText(value?: string) {
   return clean ? clean : null;
 }
 
+function normalizeSupabaseUrl(value?: string) {
+  let clean = value?.trim();
+  if (!clean) return null;
+
+  clean = clean.replace(/^['"]|['"]$/g, "").trim();
+
+  if (clean.includes("=")) {
+    clean = clean.split("=").slice(1).join("=").trim();
+  }
+
+  const urlMatch = clean.match(/https?:\/\/[^\s'"<>]+/);
+  if (urlMatch) {
+    clean = urlMatch[0];
+  }
+
+  if (/^[a-z0-9]{20,}\.supabase\.co$/i.test(clean)) {
+    clean = `https://${clean}`;
+  }
+
+  try {
+    const url = new URL(clean);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
 function escapeHtml(value: string | null | undefined) {
   return (value ?? "")
     .replace(/&/g, "&amp;")
@@ -55,14 +83,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const resendApiKey = process.env.RESEND_API_KEY;
-    const toEmail = process.env.LEAD_TO_EMAIL ?? "dinerodormido@gmail.com";
-    const fromEmail = process.env.LEAD_FROM_EMAIL ?? "Dinero Dormido <onboarding@resend.dev>";
+    const supabaseUrl = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    const resendApiKey = process.env.RESEND_API_KEY?.trim();
+    const toEmail = process.env.LEAD_TO_EMAIL?.trim() || "dinerodormido@gmail.com";
+    const fromEmail = process.env.LEAD_FROM_EMAIL?.trim() || "Dinero Dormido <onboarding@resend.dev>";
 
     if (!supabaseUrl || !supabaseServiceRoleKey || !resendApiKey) {
-      console.error("Missing lead form environment variables");
+      console.error("Missing or invalid lead form environment variables", {
+        hasSupabaseUrl: Boolean(supabaseUrl),
+        hasSupabaseServiceRoleKey: Boolean(supabaseServiceRoleKey),
+        hasResendApiKey: Boolean(resendApiKey),
+      });
       return NextResponse.json(
         { success: false, error: "Configuración incompleta" },
         { status: 500 },
