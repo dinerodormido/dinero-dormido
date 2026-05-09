@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import LeadFormBridge from "./LeadFormBridge";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -22,7 +23,10 @@ export const viewport: Viewport = { themeColor: "#00A7B5" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <LeadFormBridge />
+      </body>
     </html>
   );
 }
