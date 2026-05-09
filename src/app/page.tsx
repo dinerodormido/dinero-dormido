@@ -20,7 +20,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 type ReportType = "summary" | "invoices" | "quotes" | "work" | "clients";
 
-const DEMO_DURATION_SECONDS = 60;
+const DEMO_DURATION_SECONDS = 40;
 const DEMO_STEP_SECONDS = DEMO_DURATION_SECONDS / 5;
 
 const findings = [
@@ -510,7 +510,7 @@ function DemoSection() {
     <section id="demo" className="section demo-section">
       <div className="wrap">
         <div className="section-head center demo-head">
-          <h2>Mira cómo funciona en 60 segundos</h2>
+          <h2>Mira cómo funciona en 40 segundos</h2>
           <p className="copy">No es otra app más. Es una revisión práctica que convierte facturas, presupuestos y clientes olvidados en acciones claras.</p>
         </div>
         <div className="demo-layout">
