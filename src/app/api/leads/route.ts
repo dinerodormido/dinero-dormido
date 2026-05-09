@@ -56,15 +56,6 @@ function escapeHtml(value: string | null | undefined) {
     .replace(/'/g, "&#039;");
 }
 
-function getIpAddress(request: NextRequest) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() ?? null;
-  }
-
-  return request.headers.get("x-real-ip");
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -96,15 +87,7 @@ export async function POST(request: NextRequest) {
         hasResendApiKey: Boolean(resendApiKey),
       });
       return NextResponse.json(
-        {
-          success: false,
-          error: "Configuración incompleta",
-          debug: {
-            hasSupabaseUrl: Boolean(supabaseUrl),
-            hasSupabaseServiceRoleKey: Boolean(supabaseServiceRoleKey),
-            hasResendApiKey: Boolean(resendApiKey),
-          },
-        },
+        { success: false, error: "Configuración incompleta" },
         { status: 500 },
       );
     }
@@ -116,7 +99,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const payload = {
+    const leadPayload = {
       nombre: lead.nombre.trim(),
       empresa: lead.empresa.trim(),
       email: lead.email.trim().toLowerCase(),
@@ -124,29 +107,38 @@ export async function POST(request: NextRequest) {
       sector: optionalText(lead.sector),
       preocupacion: lead.preocupacion.trim(),
       mensaje: optionalText(lead.mensaje),
+    };
+
+    const enrichedPayload = {
+      ...leadPayload,
       source: "dinerodormido.com",
       status: "nuevo",
       user_agent: request.headers.get("user-agent"),
-      ip_address: getIpAddress(request),
+      ip_address: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip"),
     };
 
-    const { error: insertError } = await supabase.from("leads").insert(payload);
+    const { error: insertError } = await supabase.from("leads").insert(enrichedPayload);
 
     if (insertError) {
-      console.error("Supabase lead insert failed", insertError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "No se pudo guardar el lead",
-          debug: {
-            code: insertError.code,
-            message: insertError.message,
-            details: insertError.details,
-            hint: insertError.hint,
+      console.error("Supabase enriched lead insert failed", insertError);
+      const { error: fallbackError } = await supabase.from("leads").insert(leadPayload);
+
+      if (fallbackError) {
+        console.error("Supabase fallback lead insert failed", fallbackError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No se pudo guardar el lead",
+            debug: {
+              code: fallbackError.code,
+              message: fallbackError.message,
+              details: fallbackError.details,
+              hint: fallbackError.hint,
+            },
           },
-        },
-        { status: 500 },
-      );
+          { status: 500 },
+        );
+      }
     }
 
     const resend = new Resend(resendApiKey);
@@ -159,8 +151,8 @@ export async function POST(request: NextRequest) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: toEmail,
-      replyTo: payload.email,
-      subject: `Nuevo lead de Dinero Dormido: ${payload.empresa}`,
+      replyTo: leadPayload.email,
+      subject: `Nuevo lead de Dinero Dormido: ${leadPayload.empresa}`,
       html: `
         <div style="margin:0;padding:28px;background:#E6FAFC;font-family:Inter,Arial,sans-serif;color:#334155;">
           <div style="max-width:640px;margin:0 auto;background:#FFFFFF;border-radius:20px;border:1px solid #D9E5EC;overflow:hidden;">
@@ -171,13 +163,13 @@ export async function POST(request: NextRequest) {
             <div style="padding:0 28px 28px;">
               <table style="width:100%;border-collapse:collapse;font-size:15px;">
                 ${[
-                  ["Nombre", payload.nombre],
-                  ["Empresa", payload.empresa],
-                  ["Email", payload.email],
-                  ["Teléfono", payload.telefono],
-                  ["Sector", payload.sector],
-                  ["Preocupación principal", payload.preocupacion],
-                  ["Mensaje", payload.mensaje],
+                  ["Nombre", leadPayload.nombre],
+                  ["Empresa", leadPayload.empresa],
+                  ["Email", leadPayload.email],
+                  ["Teléfono", leadPayload.telefono],
+                  ["Sector", leadPayload.sector],
+                  ["Preocupación principal", leadPayload.preocupacion],
+                  ["Mensaje", leadPayload.mensaje],
                   ["Fecha de envío", sentAt],
                   ["Origen", "Landing dinerodormido.com"],
                 ]
@@ -191,7 +183,7 @@ export async function POST(request: NextRequest) {
                   )
                   .join("")}
               </table>
-              <a href="mailto:${encodeURIComponent(payload.email)}" style="display:inline-block;margin-top:22px;background:#00A7B5;color:#FFFFFF;text-decoration:none;border-radius:999px;padding:13px 18px;font-weight:800;">Responder a ${escapeHtml(payload.email)}</a>
+              <a href="mailto:${encodeURIComponent(leadPayload.email)}" style="display:inline-block;margin-top:22px;background:#00A7B5;color:#FFFFFF;text-decoration:none;border-radius:999px;padding:13px 18px;font-weight:800;">Responder a ${escapeHtml(leadPayload.email)}</a>
             </div>
           </div>
         </div>
