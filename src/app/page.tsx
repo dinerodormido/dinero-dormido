@@ -21,6 +21,7 @@ import { FormEvent, useEffect, useState } from "react";
 type ReportType = "summary" | "invoices" | "quotes" | "work" | "clients";
 
 const DEMO_DURATION_SECONDS = 60;
+const DEMO_STEP_SECONDS = DEMO_DURATION_SECONDS / 5;
 
 const findings = [
   {
@@ -56,28 +57,38 @@ const findings = [
 const demoSteps = [
   {
     title: "Subes una muestra",
-    text: "Facturas, presupuestos y clientes. Puede ser un export, Excel o PDFs.",
+    text: "Empezamos con una muestra pequeña. No necesitas tenerlo todo perfecto.",
     icon: UploadCloud,
+    label: "Datos de partida",
+    visual: ["Facturas.xlsx", "Presupuestos.pdf", "Clientes.csv", "Trabajos terminados.doc"],
   },
   {
-    title: "Detectamos vencidos",
-    text: "Aparecen facturas vencidas, pagos pendientes y prioridades de reclamación.",
+    title: "Detectamos facturas vencidas",
+    text: "Detectamos qué facturas deberían reclamarse primero.",
     icon: ReceiptText,
+    label: "Cobros pendientes",
+    visual: ["F-104 · 1.240 € · vencida hace 18 días", "F-108 · 890 € · vencida hace 7 días"],
   },
   {
     title: "Encontramos presupuestos dormidos",
-    text: "Presupuestos enviados sin respuesta, ordenados por importe y fecha.",
+    text: "Encontramos presupuestos que se enviaron, pero nadie volvió a perseguir.",
     icon: Search,
+    label: "Oportunidades comerciales",
+    visual: ["P-088 · 4.800 € · enviado hace 12 días · sin seguimiento", "P-102 · 2.100 € · enviado hace 8 días · contactar hoy"],
   },
   {
     title: "Revisamos trabajos sin facturar",
-    text: "Cruzamos trabajos terminados, aceptados y facturas emitidas.",
+    text: "Cruzamos trabajos, presupuestos y facturas para detectar posibles servicios no cobrados.",
     icon: FileText,
+    label: "Revisión interna",
+    visual: ["Trabajo terminado · Calle Mayor · sin factura asociada", "Instalación aceptada · Cliente López · revisar emisión"],
   },
   {
     title: "Recibes acciones claras",
-    text: "Informe con prioridades, mensajes listos y próximos pasos.",
+    text: "Recibes un informe claro con prioridades y mensajes listos.",
     icon: CheckCircle2,
+    label: "Informe final",
+    visual: ["Reclamar F-104", "Llamar por P-088", "Revisar trabajo Calle Mayor", "Contactar clientes de mantenimiento"],
   },
 ];
 
@@ -473,6 +484,7 @@ function DemoSection() {
 
   const active = Math.min(demoSteps.length - 1, Math.floor((elapsed / DEMO_DURATION_SECONDS) * demoSteps.length));
   const remaining = DEMO_DURATION_SECONDS - elapsed;
+  const progress = (elapsed / DEMO_DURATION_SECONDS) * 100;
   const current = demoSteps[active];
   const CurrentIcon = current.icon;
 
@@ -489,51 +501,89 @@ function DemoSection() {
     setPlaying(true);
   }
 
+  function jumpToStep(index: number) {
+    setElapsed(Math.min(DEMO_DURATION_SECONDS - 1, index * DEMO_STEP_SECONDS));
+    setPlaying(true);
+  }
+
   return (
     <section id="demo" className="section demo-section">
-      <div className="wrap demo-layout">
-        <div>
+      <div className="wrap">
+        <div className="section-head center demo-head">
           <h2>Mira cómo funciona en 60 segundos</h2>
           <p className="copy">No es otra app más. Es una revisión práctica que convierte facturas, presupuestos y clientes olvidados en acciones claras.</p>
-          <div className="demo-points">
-            {demoSteps.map((step, index) => (
-              <button key={step.title} className={index === active ? "active" : ""} onClick={() => { setElapsed(index * (DEMO_DURATION_SECONDS / demoSteps.length)); setPlaying(true); }}>
-                <span>{index + 1}</span>
-                {step.title}
-              </button>
-            ))}
+        </div>
+        <div className="demo-layout">
+          <div className="video-mockup" aria-label="Demo interactiva de la auditoría">
+            <div className="video-top">
+              <span>Demo auditoría</span>
+              <b>{formatTime(remaining)}</b>
+            </div>
+            <div className="video-screen">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current.title}
+                  initial={{ opacity: 0, y: 22, scale: .98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -18, scale: .98 }}
+                  transition={{ duration: 0.34 }}
+                  className="video-card"
+                >
+                  <div className="video-card-head">
+                    <div className="video-icon"><CurrentIcon size={30} /></div>
+                    <div>
+                      <span>Pantalla {active + 1}</span>
+                      <strong>{current.label}</strong>
+                    </div>
+                  </div>
+                  <h3>{current.title}</h3>
+                  <p>{current.text}</p>
+                  <div className={active === demoSteps.length - 1 ? "demo-visual actions-list" : "demo-visual"}>
+                    {active === demoSteps.length - 1 && <b>Acciones recomendadas esta semana:</b>}
+                    {current.visual.map((item, index) => (
+                      <div className="demo-visual-row" key={item}>
+                        <span>{active === demoSteps.length - 1 ? index + 1 : ""}</span>
+                        <p>{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+              {!playing && (
+                <button className="play-button" onClick={playDemo} aria-label="Reproducir demo">
+                  <Play size={38} fill="currentColor" />
+                </button>
+              )}
+            </div>
+            <div className="video-progress" aria-hidden="true">
+              <motion.div animate={{ width: `${progress}%` }} transition={{ duration: .45 }} />
+            </div>
+          </div>
+
+          <div className="demo-side">
+            <div className="demo-points">
+              {demoSteps.map((step, index) => {
+                const StepIcon = step.icon;
+                return (
+                  <button key={step.title} className={index === active ? "active" : ""} onClick={() => jumpToStep(index)}>
+                    <span>{index + 1}</span>
+                    <StepIcon size={18} />
+                    <strong>{step.title}</strong>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="demo-side-note">
+              <CheckCircle2 size={20} />
+              <p>La revisión no exige acceso permanente: empezamos con una muestra y te enseñamos si hay oportunidades reales.</p>
+            </div>
           </div>
         </div>
-        <div className="video-mockup">
-          <div className="video-top">
-            <span>Demo auditoría</span>
-            <b>{formatTime(remaining)}</b>
-          </div>
-          <div className="video-screen">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -18 }}
-                transition={{ duration: 0.32 }}
-                className="video-card"
-              >
-                <div className="video-icon"><CurrentIcon size={30} /></div>
-                <span>Paso {active + 1}</span>
-                <h3>{current.title}</h3>
-                <p>{current.text}</p>
-              </motion.div>
-            </AnimatePresence>
-            {!playing && (
-              <button className="play-button" onClick={playDemo} aria-label="Reproducir demo">
-                <Play size={38} fill="currentColor" />
-              </button>
-            )}
-          </div>
-          <div className="video-progress" aria-hidden="true">
-            <motion.div animate={{ width: `${(elapsed / DEMO_DURATION_SECONDS) * 100}%` }} transition={{ duration: .45 }} />
-          </div>
+
+        <div className="demo-cta">
+          <h3>¿Quieres ver qué aparecería en tu empresa?</h3>
+          <p>Empieza con una muestra pequeña de facturas y presupuestos. Te diremos si hay oportunidades antes de complicar nada.</p>
+          <a className="btn primary big" href="#formulario">Pedir revisión inicial</a>
         </div>
       </div>
     </section>
