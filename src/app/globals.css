@@ -322,7 +322,7 @@ footer { border-top: 1px solid var(--line); background: #fff; padding: 38px 0 72
   .hero-grid, .formwrap, .trust-layout, .report-slide { grid-template-columns: 1fr; }
   .demo-layout { grid-template-columns: 1fr; }
   .grid3, .grid4, .steps { grid-template-columns: repeat(2, 1fr); }
-  .hero-grid { padding-top: 46px; }
+  .hero-grid { padding-top: 78px; }
   .dash-total { font-size: 42px; }
   .report-tabs { grid-template-columns: repeat(3, 1fr); }
   .pdf-mockup { overflow-x: auto; }
@@ -339,6 +339,7 @@ footer { border-top: 1px solid var(--line); background: #fff; padding: 38px 0 72
   .nav { height: 70px; }
   .nav > .btn { display: none; }
   .logo { font-size: 18px; }
+  .hero-grid { padding-top: 88px; }
   .h1 { font-size: 38px; }
   .lead { font-size: 18px; }
   .actions .btn { width: 100%; }
