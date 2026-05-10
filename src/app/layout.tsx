@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "./logo.css";
 import LeadFormBridge from "./LeadFormBridge";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
