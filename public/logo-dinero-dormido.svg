@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="73" viewBox="0 0 360 73" role="img" aria-labelledby="title">
+  <title id="title">Dinero Dormido</title>
+  <rect width="360" height="73" fill="white"/>
+  <g fill="none" stroke="#00A7B5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M25.5 39.5c-7.5 0-13.5-4.9-13.5-11 0-4.5 3.2-8.3 7.9-10"/>
+    <path d="M23.2 39.5v16.7h15.1v-7.1c9.1 2 20.1 2 30.2-.1v7.2h15.1V46.1c7.5-3.5 12.2-9.2 12.2-15.6h7.9c3.1 0 5.5-2.4 5.5-5.5v-6.1c0-3.1-2.4-5.5-5.5-5.5h-8.6c-2-6.3-7.3-11.5-14.5-14.8-9.7-4.4-21.9-4.3-32 .3l-5.2 2.5c-8.6-1.4-17.1-.7-24.3 2.1-8.4 3.3-13.4 9.3-13.4 15.9" transform="translate(2 9)"/>
+    <path d="M31 15.5c9.7-2.6 20.2-2.2 28.7 1" transform="translate(2 9)"/>
+    <path d="M6.5 20.3c-3.9-.5-5.5-3.9-3.2-6.1 1.5-1.4 3.7-.8 4.4 1.2" transform="translate(2 9)"/>
+    <path d="M79.2 24.8c1.7 1.8 4.6 1.9 6.4.1" transform="translate(2 9)"/>
+  </g>
+  <g fill="#08265C" font-family="Inter, Manrope, Arial, sans-serif" font-weight="800">
+    <text x="82" y="13" font-size="13">z</text>
+    <text x="96" y="7" font-size="15">z</text>
+    <text x="122" y="48" font-size="35">Dinero</text>
+  </g>
+  <text x="235" y="48" fill="#00A7B5" font-family="Inter, Manrope, Arial, sans-serif" font-size="35" font-weight="800">Dormido</text>
+</svg>
