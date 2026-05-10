@@ -1,8 +1,11 @@
 .logo {
   gap: 0;
-  width: clamp(220px, 24vw, 300px);
-  height: 58px;
+  width: clamp(260px, 24vw, 340px);
+  min-width: clamp(260px, 24vw, 340px);
+  height: 60px;
   align-items: center;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .logo > span:not(.mark) {
@@ -11,12 +14,13 @@
 
 .mark {
   width: 100%;
-  height: 58px;
+  height: 60px;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   flex: 0 0 auto;
+  overflow: visible;
 }
 
 .mark svg {
@@ -27,13 +31,20 @@
   content: "";
   display: block;
   width: 100%;
-  height: 58px;
-  background: url("/logo-dinero-dormido.svg") left center / contain no-repeat;
+  height: 60px;
+  background: url("/logo-dinero-dormido.svg?v=3") left center / contain no-repeat;
+}
+
+@media (max-width: 1120px) {
+  .links {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
   .logo {
     width: 224px;
+    min-width: 224px;
     height: 48px;
   }
 
