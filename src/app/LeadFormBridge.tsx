@@ -40,8 +40,12 @@ function setMessage(form: HTMLFormElement, type: "success" | "error", text: stri
   form.appendChild(message);
 }
 
+function formInput(form: HTMLFormElement, index: number) {
+  return Array.from(form.querySelectorAll<HTMLInputElement>("input:not([name='website'])"))[index];
+}
+
 function prepareForm(form: HTMLFormElement) {
-  const inputs = Array.from(form.querySelectorAll("input"));
+  const inputs = Array.from(form.querySelectorAll<HTMLInputElement>("input:not([name='website'])"));
   const select = form.querySelector("select");
   const textarea = form.querySelector("textarea");
   const button = form.querySelector<HTMLButtonElement>("button[type='submit'], button");
@@ -76,16 +80,19 @@ function prepareForm(form: HTMLFormElement) {
 }
 
 function getPayload(form: HTMLFormElement): LeadPayload {
-  const formData = new FormData(form);
+  const select = form.querySelector<HTMLSelectElement>("select");
+  const textarea = form.querySelector<HTMLTextAreaElement>("textarea");
+  const honeypot = form.querySelector<HTMLInputElement>("input[name='website']");
+
   return {
-    nombre: String(formData.get("nombre") ?? "").trim(),
-    empresa: String(formData.get("empresa") ?? "").trim(),
-    email: String(formData.get("email") ?? "").trim(),
-    telefono: String(formData.get("telefono") ?? "").trim(),
-    sector: String(formData.get("sector") ?? "").trim(),
-    preocupacion: String(formData.get("preocupacion") ?? "").trim(),
-    mensaje: String(formData.get("mensaje") ?? "").trim(),
-    website: String(formData.get("website") ?? "").trim(),
+    nombre: formInput(form, 0)?.value.trim() ?? "",
+    empresa: formInput(form, 1)?.value.trim() ?? "",
+    email: formInput(form, 2)?.value.trim() ?? "",
+    telefono: formInput(form, 3)?.value.trim() ?? "",
+    sector: formInput(form, 4)?.value.trim() ?? "",
+    preocupacion: select?.value.trim() ?? "",
+    mensaje: textarea?.value.trim() ?? "",
+    website: honeypot?.value.trim() ?? "",
   };
 }
 
